@@ -1,4 +1,3 @@
-import { useState, useRef, useEffect } from "react";
 import { motion } from "motion/react";
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -12,21 +11,10 @@ import { useNavigate } from "react-router";
 
 export default function NoteCard({ note }: { note: Note }) {
   const navigate = useNavigate();
-  const [isRenaming, setIsRenaming] = useState(false);
-  const cardTitleRef = useRef<HTMLDivElement>(null);
 
   const handleClick = () => {
-    if (isRenaming) return;
     navigate(`/note?title=${note.title}`);
   };
-
-  useEffect(() => {
-    if (cardTitleRef.current && isRenaming) {
-      requestAnimationFrame(() => {
-        cardTitleRef.current?.focus();
-      });
-    }
-  }, [isRenaming]);
 
   return (
     <motion.div
@@ -43,25 +31,7 @@ export default function NoteCard({ note }: { note: Note }) {
             onClick={handleClick}
           >
             <CardHeader>
-              <CardTitle
-                className="text-xl"
-                contentEditable={isRenaming}
-                ref={cardTitleRef}
-                onClick={(e) => {
-                  if (isRenaming) {
-                    e.stopPropagation();
-                    e.preventDefault();
-                  }
-                }}
-                onBlur={(e) => {
-                  console.log(e.target.textContent);
-                  setIsRenaming(false);
-                }}
-                defaultValue={note.title}
-                suppressContentEditableWarning
-              >
-                {!isRenaming && note.title}
-              </CardTitle>
+              <CardTitle className="text-xl">{note.title}</CardTitle>
               <p className="text-sm text-muted-foreground line-clamp-2">
                 {note.content.replace(/---[\s\S]*?---/g, "").length > 100
                   ? `${note.content
@@ -79,13 +49,7 @@ export default function NoteCard({ note }: { note: Note }) {
         </ContextMenuTrigger>
         <ContextMenuContent>
           <ContextMenuItem onClick={handleClick}>Open</ContextMenuItem>
-          <ContextMenuItem
-            onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              setIsRenaming(true);
-            }}
-          >
+          <ContextMenuItem onClick={() => console.log("Rename")}>
             Rename
           </ContextMenuItem>
           <ContextMenuItem onClick={() => console.log("Delete")}>

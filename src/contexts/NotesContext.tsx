@@ -13,7 +13,7 @@ interface NotesContextType {
   loadFileTree: () => Promise<void>
   createNote: (folderPath?: string) => Promise<string | null>
   createFolder: (folderName: string, parentPath?: string) => Promise<boolean>
-  saveNote: (title: string, content: string) => Promise<boolean>
+  saveNote: (title: string, content: string, folderPath?: string) => Promise<boolean>
   loadNote: (title: string) => Promise<Note | null>
   loadNoteByPath: (path: string) => Promise<Note | null>
   openFile: (path: string) => Promise<void>
@@ -116,9 +116,9 @@ export function NotesProvider({ children }: NotesProviderProps) {
     }
   }
 
-  const saveNote = async (title: string, content: string) => {
+  const saveNote = async (title: string, content: string, folderPath?: string) => {
     try {
-      const success = await fileSystem.saveNote(title, content)
+      const success = await fileSystem.saveNote(title, content, folderPath)
       if (success) {
         // Reload notes to reflect changes
         await loadNotes()
