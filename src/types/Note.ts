@@ -1,4 +1,4 @@
-import { type Note } from "./Note";
+import { type Category } from "./Category";
 
 export type Note = {
 	title: string;

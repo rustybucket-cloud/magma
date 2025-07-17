@@ -23,4 +23,8 @@
 - Handle async operations with proper error boundaries
 - Validate props with TypeScript interfaces
 
+## Styling
+- Use TailwindCSS v4 with shadcn/ui components
+- Style decisions are in the STYLES.md file
+
 No linting/testing commands configured - consider adding ESLint and testing framework.
