@@ -1,0 +1,358 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@font-face {
+  font-family: 'Space Grotesk';
+  src: url('./assets/fonts/SpaceGrotesk-VariableFont_wght.ttf') format('truetype');
+  font-weight: 300 700; /* Variable font weight range */
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme inline {
+  /* Volcanic Corner Radius System */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  
+  /* Base radius for Shadcn compatibility */
+  --radius: 8px;
+  
+  /* Volcanic Color Mappings */
+  --color-background: var(--volcanic-obsidian);
+  --color-foreground: var(--volcanic-ash);
+  --color-card: var(--volcanic-obsidian-light);
+  --color-card-foreground: var(--volcanic-ash);
+  --color-popover: var(--volcanic-obsidian-light);
+  --color-popover-foreground: var(--volcanic-ash);
+  --color-primary: var(--volcanic-magma);
+  --color-primary-foreground: var(--volcanic-ash);
+  --color-secondary: var(--volcanic-obsidian-lighter);
+  --color-secondary-foreground: var(--volcanic-ash);
+  --color-muted: var(--volcanic-obsidian-lighter);
+  --color-muted-foreground: var(--volcanic-ash-dimmed);
+  --color-accent: var(--volcanic-magma);
+  --color-accent-foreground: var(--volcanic-ash);
+  --color-destructive: var(--volcanic-magma-dark);
+  --color-destructive-foreground: var(--volcanic-ash);
+  --color-border: var(--volcanic-border);
+  --color-input: var(--volcanic-input-bg);
+  --color-ring: var(--volcanic-magma);
+  
+  /* Chart colors using volcanic theme */
+  --color-chart-1: var(--volcanic-magma);
+  --color-chart-2: var(--volcanic-magma-light);
+  --color-chart-3: var(--volcanic-ash-dimmed);
+  --color-chart-4: var(--volcanic-magma-dark);
+  --color-chart-5: var(--volcanic-ember);
+  
+  /* Sidebar colors */
+  --color-sidebar: var(--volcanic-obsidian);
+  --color-sidebar-foreground: var(--volcanic-ash);
+  --color-sidebar-primary: var(--volcanic-magma);
+  --color-sidebar-primary-foreground: var(--volcanic-ash);
+  --color-sidebar-accent: var(--volcanic-obsidian-lighter);
+  --color-sidebar-accent-foreground: var(--volcanic-ash);
+  --color-sidebar-border: var(--volcanic-border);
+  --color-sidebar-ring: var(--volcanic-magma);
+}
+
+:root {
+  /* Volcanic Design System Colors */
+  --volcanic-obsidian: #1a1a1a;           /* Main background */
+  --volcanic-obsidian-light: #242424;      /* Card backgrounds */
+  --volcanic-obsidian-lighter: #2d2d2d;    /* Secondary elements */
+  --volcanic-ash: #f5f5f5;                 /* Primary text */
+  --volcanic-ash-dimmed: #a0a0a0;          /* Secondary text */
+  --volcanic-magma: #ff6b35;               /* Primary accent */
+  --volcanic-magma-light: #ff8847;         /* Lighter accent */
+  --volcanic-magma-dark: #e55a2b;          /* Darker accent */
+  --volcanic-ember: #ff9966;               /* Warm highlight */
+  
+  /* Functional colors */
+  --volcanic-border: rgba(245, 245, 245, 0.1);
+  --volcanic-input-bg: rgba(245, 245, 245, 0.05);
+  --volcanic-hover: rgba(255, 107, 53, 0.1);
+  --volcanic-glow: rgba(255, 107, 53, 0.2);
+  
+  /* Volcanic texture patterns */
+  --volcanic-rock-grain: 
+    radial-gradient(circle at 25% 25%, rgba(245, 245, 245, 0.02) 1px, transparent 1px),
+    radial-gradient(circle at 75% 75%, rgba(245, 245, 245, 0.015) 0.5px, transparent 0.5px);
+  --volcanic-ash-cloud: 
+    radial-gradient(ellipse at top, rgba(245, 245, 245, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at bottom left, rgba(245, 245, 245, 0.03) 0%, transparent 50%);
+  --volcanic-ember-glow:
+    radial-gradient(circle at 25% 25%, rgba(255, 107, 53, 0.03) 20px, transparent 20px),
+    radial-gradient(circle at 75% 75%, rgba(255, 107, 53, 0.02) 15px, transparent 15px);
+  
+  /* Volcanic shadows */
+  --volcanic-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --volcanic-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.15);
+  --volcanic-shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.2);
+  --volcanic-shadow-glow: 0 0 20px rgba(255, 107, 53, 0.2);
+  
+  /* Base Shadcn mappings */
+  --radius: 8px;
+  --background: var(--volcanic-obsidian);
+  --foreground: var(--volcanic-ash);
+  --card: var(--volcanic-obsidian-light);
+  --card-foreground: var(--volcanic-ash);
+  --popover: var(--volcanic-obsidian-light);
+  --popover-foreground: var(--volcanic-ash);
+  --primary: var(--volcanic-magma);
+  --primary-foreground: var(--volcanic-ash);
+  --secondary: var(--volcanic-obsidian-lighter);
+  --secondary-foreground: var(--volcanic-ash);
+  --muted: var(--volcanic-obsidian-lighter);
+  --muted-foreground: var(--volcanic-ash-dimmed);
+  --accent: var(--volcanic-magma);
+  --accent-foreground: var(--volcanic-ash);
+  --destructive: var(--volcanic-magma-dark);
+  --destructive-foreground: var(--volcanic-ash);
+  --border: var(--volcanic-border);
+  --input: var(--volcanic-input-bg);
+  --ring: var(--volcanic-magma);
+  --chart-1: var(--volcanic-magma);
+  --chart-2: var(--volcanic-magma-light);
+  --chart-3: var(--volcanic-ash-dimmed);
+  --chart-4: var(--volcanic-magma-dark);
+  --chart-5: var(--volcanic-ember);
+  --sidebar: var(--volcanic-obsidian);
+  --sidebar-foreground: var(--volcanic-ash);
+  --sidebar-primary: var(--volcanic-magma);
+  --sidebar-primary-foreground: var(--volcanic-ash);
+  --sidebar-accent: var(--volcanic-obsidian-lighter);
+  --sidebar-accent-foreground: var(--volcanic-ash);
+  --sidebar-border: var(--volcanic-border);
+  --sidebar-ring: var(--volcanic-magma);
+}
+
+/* Remove dark mode - volcanic theme is inherently dark */
+/* Volcanic theme works as single unified dark aesthetic */
+
+@layer base {
+  * {
+    @apply border-border;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+  }
+  
+  *:focus-visible {
+    outline: 2px solid var(--volcanic-magma);
+    outline-offset: 2px;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    background-image: var(--volcanic-rock-grain);
+    background-size: 50px 50px, 30px 30px;
+    line-height: 1.6;
+  }
+
+  .container {
+    @apply mx-auto max-w-screen-lg px-4 sm:px-6 lg:px-8;
+  }
+  
+  /* Volcanic Typography System */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--volcanic-ash);
+  }
+  
+  h1 {
+    font-size: 3.5rem;
+    font-weight: 700;
+  }
+  
+  h2 {
+    font-size: 2.25rem;
+    font-weight: 600;
+  }
+  
+  h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+  
+  h4 {
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+  
+  p {
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+  }
+  
+  /* Volcanic Component Enhancements */
+  .volcanic-card {
+    @apply py-4 px-6 rounded border-1;
+    /* Combined textures: Rock grain and Ash Cloud */
+    background-image: 
+    /* Ash Cloud texture (atmospheric) */
+    radial-gradient(ellipse at top, rgba(245, 245, 245, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at bottom left, rgba(245, 245, 245, 0.03) 0%, transparent 50%),
+    /* Rock grain texture */
+    radial-gradient(circle at 25% 25%, rgba(245, 245, 245, 0.02) 1px, transparent 1px),
+    radial-gradient(circle at 75% 75%, rgba(245, 245, 245, 0.015) 0.5px, transparent 0.5px);
+    background-size: 100% 100%, 100% 100%, 50px 50px, 30px 30px;
+    transition: all 0.3s ease;
+  }
+  
+  .volcanic-card:hover {
+    @apply border-accent;
+    transform: translateY(-3px);
+    border-color: var(--volcanic-glow);
+    box-shadow: var(--volcanic-shadow-lg);
+  }
+  
+  .volcanic-button-primary {
+    background: var(--volcanic-magma);
+    color: var(--volcanic-ash);
+    border-radius: 8px;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .volcanic-button-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+      radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1) 20px, transparent 20px),
+      radial-gradient(circle at 70% 70%, rgba(255, 255, 255, 0.05) 15px, transparent 15px);
+    background-size: 60px 60px, 40px 40px;
+    pointer-events: none;
+  }
+  
+  .volcanic-button-primary:hover {
+    background: var(--volcanic-magma-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--volcanic-shadow-glow);
+  }
+  
+  .volcanic-input {
+    background: var(--volcanic-input-bg);
+    border: 1px solid var(--volcanic-border);
+    border-radius: 8px;
+    color: var(--volcanic-ash);
+    font-family: 'Inter', sans-serif;
+    transition: all 0.3s ease;
+  }
+  
+  .volcanic-input:focus {
+    border-color: var(--volcanic-magma);
+    box-shadow: 0 0 0 3px var(--volcanic-hover);
+    background: rgba(245, 245, 245, 0.08);
+    outline: none;
+  }
+  
+  .volcanic-input::placeholder {
+    color: var(--volcanic-ash-dimmed);
+  }
+  
+  /* Volcanic Badge */
+  .volcanic-badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 12px;
+    padding: 4px 12px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+  }
+  
+  .volcanic-badge-primary {
+    background: var(--volcanic-hover);
+    color: var(--volcanic-magma);
+    border: 1px solid var(--volcanic-glow);
+  }
+  
+  .volcanic-badge-secondary {
+    background: rgba(245, 245, 245, 0.1);
+    color: var(--volcanic-ash);
+    border: 1px solid var(--volcanic-border);
+  }
+  
+  /* Atmospheric sections */
+  .volcanic-hero {
+    background: var(--volcanic-obsidian);
+    background-image: var(--volcanic-ash-cloud);
+    border-radius: 24px;
+  }
+  
+  .volcanic-glow-section {
+    background: var(--volcanic-obsidian);
+    background-image: var(--volcanic-ember-glow);
+    background-size: 100px 100px, 80px 80px;
+    border-radius: 16px;
+  }
+  
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: var(--volcanic-obsidian);
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: var(--volcanic-obsidian-lighter);
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--volcanic-magma);
+  }
+  
+  /* Selection styling */
+  ::selection {
+    background: var(--volcanic-glow);
+    color: var(--volcanic-ash);
+  }
+  
+  /* Focus ring for accessibility */
+  .focus-ring:focus-visible {
+    outline: 2px solid var(--volcanic-magma);
+    outline-offset: 2px;
+  }
+  
+  /* Animation classes for volcanic effects */
+  @keyframes volcaniCanimate {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+  
+  @keyframes volcanicGlow {
+    0%, 100% { box-shadow: var(--volcanic-shadow-md); }
+    50% { box-shadow: var(--volcanic-shadow-glow); }
+  }
+  
+  .volcanic-pulse {
+    animation: volcaniCanimate 3s ease-in-out infinite;
+  }
+  
+  .volcanic-glow-pulse {
+    animation: volcanicGlow 3s ease-in-out infinite;
+  }
+}
