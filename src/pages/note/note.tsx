@@ -10,17 +10,19 @@ import { useNotes } from "@/contexts/NotesContext"
 export default function NotePage() {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
-  const { saveNote, loadNote } = useNotes()
+  const { saveNote, loadNote, createNote } = useNotes()
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
+  const [currentNoteId, setCurrentNoteId] = useState<string | null>(id || null)
 
   useEffect(() => {
     if (id) {
-      // Load note from file system
+      // Load existing note from file system
       loadNote(id).then(note => {
         if (note) {
           setTitle(note.title)
           setContent(note.content)
+          setCurrentNoteId(id)
         }
       })
     }
@@ -28,18 +30,25 @@ export default function NotePage() {
 
   const autoSave = useCallback(async () => {
     if (title.trim() || content.trim()) {
-      const noteData = {
-        title: title || "Untitled",
-        content,
-      }
-      
       try {
-        await saveNote(noteData)
+        if (currentNoteId) {
+          // Update existing note
+          await saveNote(currentNoteId, title || "Untitled", content)
+        } else {
+          // Create new note if we don't have an ID yet
+          const newNoteId = await createNote()
+          if (newNoteId) {
+            setCurrentNoteId(newNoteId)
+            await saveNote(newNoteId, title || "Untitled", content)
+            // Update URL to reflect the new note ID
+            navigate(`/note/${newNoteId}`, { replace: true })
+          }
+        }
       } catch (error) {
         console.error("Error auto-saving note:", error)
       }
     }
-  }, [title, content, saveNote])
+  }, [currentNoteId, title, content, saveNote, createNote, navigate])
 
   // Auto-save after 2 seconds of inactivity
   useEffect(() => {
@@ -98,7 +107,7 @@ export default function NotePage() {
         transition={{ duration: 0.4, delay: 0.2 }}
       >
         <NoteEditor 
-          initialContent={content}
+          key={currentNoteId || 'new'}
           onContentChange={handleContentChange}
         />
       </motion.div>

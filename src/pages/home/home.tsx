@@ -23,6 +23,8 @@ export default function Home() {
   const navigate = useNavigate()
   const { notes, notesFolder, selectFolder } = useNotes()
 
+  console.log("notes:", notes)
+
   const handleNoteClick = (noteId: string) => {
     navigate(`/note/${noteId}`)
   }

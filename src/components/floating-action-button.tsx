@@ -2,6 +2,7 @@ import { Plus } from "lucide-react"
 import { useNavigate } from "react-router"
 import { motion } from "motion/react"
 import { Button } from "@/components/ui/button"
+import { useNotes } from "@/contexts/NotesContext"
 import { cn } from "@/lib/utils"
 
 interface FloatingActionButtonProps {
@@ -10,9 +11,22 @@ interface FloatingActionButtonProps {
 
 export function FloatingActionButton({ className }: FloatingActionButtonProps) {
   const navigate = useNavigate()
+  const { createNote } = useNotes()
 
-  const handleClick = () => {
-    navigate("/note")
+  const handleClick = async () => {
+    try {
+      const noteId = await createNote()
+      if (noteId) {
+        navigate(`/note/${noteId}`)
+      } else {
+        // Fallback to creating a note without file system
+        navigate("/note")
+      }
+    } catch (error) {
+      console.error('Error creating note:', error)
+      // Fallback to creating a note without file system
+      navigate("/note")
+    }
   }
 
   return (

@@ -8,7 +8,8 @@ interface NotesContextType {
   isLoading: boolean
   selectFolder: () => Promise<void>
   loadNotes: () => Promise<void>
-  saveNote: (note: Partial<Note> & { title: string; content: string }) => Promise<boolean>
+  createNote: () => Promise<string | null>
+  saveNote: (id: string, title: string, content: string) => Promise<boolean>
   loadNote: (id: string) => Promise<Note | null>
   deleteNote: (id: string) => Promise<boolean>
 }
@@ -61,9 +62,23 @@ export function NotesProvider({ children }: NotesProviderProps) {
     }
   }
 
-  const saveNote = async (note: Partial<Note> & { title: string; content: string }) => {
+  const createNote = async () => {
     try {
-      const success = await fileSystem.saveNote(note)
+      const noteId = await fileSystem.createNote()
+      if (noteId) {
+        // Reload notes to reflect changes
+        await loadNotes()
+      }
+      return noteId
+    } catch (error) {
+      console.error('Error creating note:', error)
+      return null
+    }
+  }
+
+  const saveNote = async (id: string, title: string, content: string) => {
+    try {
+      const success = await fileSystem.saveNote(id, title, content)
       if (success) {
         // Reload notes to reflect changes
         await loadNotes()
@@ -104,6 +119,7 @@ export function NotesProvider({ children }: NotesProviderProps) {
     isLoading,
     selectFolder,
     loadNotes,
+    createNote,
     saveNote,
     loadNote,
     deleteNote

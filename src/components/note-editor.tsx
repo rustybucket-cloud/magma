@@ -1,12 +1,10 @@
-import { useEffect } from "react"
-import { $getRoot, $createTextNode } from "lexical"
+import { $getRoot } from "lexical"
 import { LexicalComposer } from "@lexical/react/LexicalComposer"
 import { PlainTextPlugin } from "@lexical/react/LexicalPlainTextPlugin"
 import { ContentEditable } from "@lexical/react/LexicalContentEditable"
 import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin"
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin"
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary"
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
 import { cn } from "@/lib/utils"
 
 const theme = {
@@ -22,28 +20,13 @@ function onError(error: Error) {
   console.error(error)
 }
 
-function InitialContentPlugin({ initialContent }: { initialContent: string }) {
-  const [editor] = useLexicalComposerContext()
 
-  useEffect(() => {
-    if (initialContent) {
-      editor.update(() => {
-        const root = $getRoot()
-        root.clear()
-        root.append($createTextNode(initialContent))
-      })
-    }
-  }, [editor, initialContent])
-
-  return null
-}
 
 interface NoteEditorProps {
-  initialContent?: string
   onContentChange?: (content: string) => void
 }
 
-export function NoteEditor({ initialContent = "", onContentChange }: NoteEditorProps) {
+export function NoteEditor({ onContentChange }: NoteEditorProps) {
   const initialConfig = {
     namespace: "NoteEditor",
     theme,
@@ -81,7 +64,6 @@ export function NoteEditor({ initialContent = "", onContentChange }: NoteEditorP
             }}
           />
           <HistoryPlugin />
-          <InitialContentPlugin initialContent={initialContent} />
         </div>
       </LexicalComposer>
     </div>

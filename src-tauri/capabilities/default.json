@@ -6,12 +6,21 @@
   "permissions": [
     "core:default",
     "opener:default",
+    "fs:allow-read-text-file",
+    "fs:allow-write-text-file",
     "fs:allow-read-dir",
-    "fs:allow-read-file",
-    "fs:allow-write-file",
-    "fs:allow-create",
-    "fs:allow-remove",
     "fs:allow-exists",
+    "fs:allow-home-write",
+    "fs:allow-home-write-recursive",
+    "fs:allow-document-write",
+    "fs:allow-document-write-recursive",
+    "fs:allow-desktop-write",
+    "fs:allow-desktop-write-recursive",
+    "fs:allow-download-write",
+    "fs:allow-download-write-recursive",
+    "fs:allow-public-write",
+    "fs:allow-public-write-recursive",
+    "fs:write-all",
     "dialog:allow-open"
   ]
 }

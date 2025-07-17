@@ -90,26 +90,69 @@ export class FileSystemManager {
     }
   }
 
-  async saveNote(note: Partial<Note> & { title: string; content: string }): Promise<boolean> {
+  async createNote(): Promise<string | null> {
     if (!this.notesFolder) {
       throw new Error('No notes folder selected')
     }
 
     try {
-      // Create filename from title (sanitize for filesystem)
-      const filename = this.sanitizeFilename(note.title) + '.md'
+      // Generate unique ID and filename
+      const timestamp = Date.now()
+      const id = `note-${timestamp}`
+      const filename = `${id}.md`
       const filePath = await join(this.notesFolder, filename)
 
-      // Create frontmatter with metadata
+      // Create initial note content
       const frontmatter = `---
-title: ${note.title}
+title: Untitled
 created: ${new Date().toISOString()}
 updated: ${new Date().toISOString()}
 ---
 
 `
 
-      const fileContent = frontmatter + note.content
+      await writeTextFile(filePath, frontmatter)
+      return id
+    } catch (error) {
+      console.error('Error creating note:', error)
+      return null
+    }
+  }
+
+  async saveNote(id: string, title: string, content: string): Promise<boolean> {
+    if (!this.notesFolder) {
+      throw new Error('No notes folder selected')
+    }
+
+    try {
+      const filename = `${id}.md`
+      const filePath = await join(this.notesFolder, filename)
+
+      // Check if file exists to determine if this is an update
+      const fileExists = await exists(filePath)
+      let createdDate = new Date().toISOString()
+
+      if (fileExists) {
+        // If updating, preserve the original created date
+        try {
+          const existingContent = await readTextFile(filePath)
+          const { frontmatter } = this.parseFrontmatter(existingContent)
+          createdDate = frontmatter.created || createdDate
+        } catch (error) {
+          console.error('Error reading existing file for created date:', error)
+        }
+      }
+
+      // Create frontmatter with metadata
+      const frontmatter = `---
+title: ${title}
+created: ${createdDate}
+updated: ${new Date().toISOString()}
+---
+
+`
+
+      const fileContent = frontmatter + content
 
       await writeTextFile(filePath, fileContent)
       return true
@@ -173,13 +216,7 @@ updated: ${new Date().toISOString()}
     }
   }
 
-  private sanitizeFilename(filename: string): string {
-    // Remove or replace invalid filename characters
-    return filename
-      .replace(/[<>:"/\\|?*]/g, '-')
-      .replace(/\s+/g, '-')
-      .toLowerCase()
-  }
+
 
   private parseFrontmatter(content: string): { frontmatter: any; body: string } {
     const frontmatterRegex = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/
