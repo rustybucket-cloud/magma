@@ -12,9 +12,11 @@ function App() {
     <NotesProvider>
       <SidebarProvider>
         <AppSidebar />
-        <div className="w-full">
-          <SidebarTrigger />
-          <main className="w-full h-full border-1 border-gray-600 rounded-lg">
+        <div className="w-full h-screen">
+          <header className="h-[var(--header-height)]">
+            <SidebarTrigger />
+          </header>
+          <main className="min-h-[calc(100vh-var(--header-height)-8px)] border-1 border-gray-600 rounded-lg m-1">
             <RouterProvider router={router} />
           </main>
         </div>

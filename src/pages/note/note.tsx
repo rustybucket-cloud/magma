@@ -1,5 +1,5 @@
 import { useNavigate, useSearchParams } from "react-router"
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "motion/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"

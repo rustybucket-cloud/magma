@@ -1,7 +1,7 @@
 import { open } from '@tauri-apps/plugin-dialog'
-import { readDir, readTextFile, writeTextFile, exists, rename } from '@tauri-apps/plugin-fs'
+import { readDir, readTextFile, writeTextFile, exists, rename, mkdir, remove } from '@tauri-apps/plugin-fs'
 import { join } from '@tauri-apps/api/path'
-import { type Note } from '@/types'
+import { type Note, type FileTreeItem } from '@/types'
 
 export interface FileNote {
   title: string
@@ -59,6 +59,54 @@ export class FileSystemManager {
     localStorage.setItem('notesFolder', path)
   }
 
+  async loadFileTree(): Promise<FileTreeItem[]> {
+    if (!this.notesFolder) {
+      return []
+    }
+
+    try {
+      return await this.buildFileTree(this.notesFolder, '')
+    } catch (error) {
+      console.error('Error loading file tree:', error)
+      return []
+    }
+  }
+
+  private async buildFileTree(basePath: string, relativePath: string): Promise<FileTreeItem[]> {
+    const fullPath = relativePath ? await join(basePath, relativePath) : basePath
+    const entries = await readDir(fullPath)
+    const items: FileTreeItem[] = []
+
+    for (const entry of entries) {
+      const itemPath = relativePath ? `${relativePath}/${entry.name}` : entry.name
+      
+      if (entry.isFile && entry.name.endsWith('.md')) {
+        items.push({
+          name: entry.name.replace('.md', ''),
+          path: itemPath,
+          type: 'file'
+        })
+      } else if (entry.isDirectory) {
+        const children = await this.buildFileTree(basePath, itemPath)
+        items.push({
+          name: entry.name,
+          path: itemPath,
+          type: 'folder',
+          children,
+          isExpanded: false
+        })
+      }
+    }
+
+    // Sort: folders first, then files, both alphabetically
+    return items.sort((a, b) => {
+      if (a.type !== b.type) {
+        return a.type === 'folder' ? -1 : 1
+      }
+      return a.name.localeCompare(b.name)
+    })
+  }
+
   async loadNotes(): Promise<Note[]> {
     if (!this.notesFolder) {
       return []
@@ -100,7 +148,7 @@ export class FileSystemManager {
     }
   }
 
-  async createNote(): Promise<string | null> {
+  async createNote(folderPath?: string): Promise<string | null> {
     if (!this.notesFolder) {
       throw new Error('No notes folder selected')
     }
@@ -110,7 +158,13 @@ export class FileSystemManager {
       const timestamp = Date.now()
       const title = `Untitled-${timestamp}`
       const filename = this.titleToFilename(title) + '.md'
-      const filePath = await join(this.notesFolder, filename)
+      
+      // Determine the target directory
+      const targetDir = folderPath 
+        ? await join(this.notesFolder, folderPath)
+        : this.notesFolder
+      
+      const filePath = await join(targetDir, filename)
 
       // Create initial note content
       const frontmatter = `---
@@ -126,6 +180,43 @@ updated: ${new Date().toISOString()}
     } catch (error) {
       console.error('Error creating note:', error)
       return null
+    }
+  }
+
+  async createFolder(folderName: string, parentPath?: string): Promise<boolean> {
+    if (!this.notesFolder) {
+      throw new Error('No notes folder selected')
+    }
+
+    try {
+      // Sanitize folder name
+      const sanitizedName = folderName
+        .replace(/[<>:"/\\|?*]/g, '-')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
+
+      if (!sanitizedName) {
+        throw new Error('Invalid folder name')
+      }
+
+      // Determine the target directory
+      const targetDir = parentPath 
+        ? await join(this.notesFolder, parentPath)
+        : this.notesFolder
+      
+      const folderPath = await join(targetDir, sanitizedName)
+
+      // Check if folder already exists
+      if (await exists(folderPath)) {
+        throw new Error('Folder already exists')
+      }
+
+      await mkdir(folderPath)
+      return true
+    } catch (error) {
+      console.error('Error creating folder:', error)
+      return false
     }
   }
 
@@ -203,6 +294,40 @@ updated: ${new Date().toISOString()}
     }
   }
 
+  async loadNoteByPath(relativePath: string): Promise<Note | null> {
+    if (!this.notesFolder) {
+      return null
+    }
+
+    try {
+      const filePath = await join(this.notesFolder, relativePath + '.md')
+      
+      if (!(await exists(filePath))) {
+        return null
+      }
+
+      const content = await readTextFile(filePath)
+      
+      // Parse frontmatter and content
+      const { frontmatter, body } = this.parseFrontmatter(content)
+      
+      // Extract title from path (get filename without extension)
+      const pathParts = relativePath.split('/')
+      const filename = pathParts[pathParts.length - 1]
+      
+      return {
+        title: frontmatter.title || filename,
+        content: body,
+        category: { id: '1', name: 'General' },
+        createdAt: frontmatter.created ? new Date(frontmatter.created) : new Date(),
+        updatedAt: frontmatter.updated ? new Date(frontmatter.updated) : new Date()
+      }
+    } catch (error) {
+      console.error('Error loading note by path:', error)
+      return null
+    }
+  }
+
   async renameNote(title: string, newTitle: string): Promise<boolean> {
     if (!this.notesFolder) {
       throw new Error('No notes folder selected')
@@ -237,14 +362,86 @@ updated: ${new Date().toISOString()}
       const filePath = await join(this.notesFolder, filename)
       
       if (await exists(filePath)) {
-        // Note: You'd need to add delete permission and import remove function
-        // await remove(filePath)
-        console.log('Delete functionality would remove:', filePath)
+        await remove(filePath)
         return true
       }
       return false
     } catch (error) {
       console.error('Error deleting note:', error)
+      return false
+    }
+  }
+
+  async deleteFileOrFolder(relativePath: string): Promise<boolean> {
+    if (!this.notesFolder) {
+      return false
+    }
+
+    try {
+      const fullPath = await join(this.notesFolder, relativePath)
+      
+      if (await exists(fullPath)) {
+        await remove(fullPath, { recursive: true })
+        return true
+      }
+      return false
+    } catch (error) {
+      console.error('Error deleting file or folder:', error)
+      return false
+    }
+  }
+
+  async renameFileOrFolder(oldPath: string, newName: string, isFile: boolean = false): Promise<boolean> {
+    if (!this.notesFolder) {
+      return false
+    }
+
+    try {
+      console.log('renameFileOrFolder called with:', { oldPath, newName, isFile })
+      
+      // The oldPath from file tree already includes .md extension for files
+      const oldFullPath = await join(this.notesFolder, oldPath)
+      
+      console.log('Checking if old path exists:', oldFullPath)
+      if (!(await exists(oldFullPath))) {
+        console.log('Old path does not exist')
+        return false
+      }
+
+      // Get the parent directory from the old path
+      const pathParts = oldPath.split('/')
+      const parentPath = pathParts.slice(0, -1).join('/')
+      
+      // Sanitize the new name
+      let sanitizedName = newName
+        .replace(/[<>:"/\\|?*]/g, '-')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
+
+      if (!sanitizedName) {
+        throw new Error('Invalid name')
+      }
+
+      // For files, add .md extension to the new name
+      const actualNewName = isFile ? sanitizedName + '.md' : sanitizedName
+      const newRelativePath = parentPath ? `${parentPath}/${actualNewName}` : actualNewName
+      const newFullPath = await join(this.notesFolder, newRelativePath)
+
+      console.log('New path will be:', newFullPath)
+
+      // Check if target already exists
+      if (await exists(newFullPath)) {
+        console.log('Target already exists')
+        throw new Error('A file or folder with that name already exists')
+      }
+
+      console.log('Attempting to rename from', oldFullPath, 'to', newFullPath)
+      await rename(oldFullPath, newFullPath)
+      console.log('Rename successful')
+      return true
+    } catch (error) {
+      console.error('Error renaming file or folder:', error)
       return false
     }
   }

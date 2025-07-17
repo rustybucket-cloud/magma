@@ -2,25 +2,34 @@ import { motion } from "motion/react";
 import { FolderOpen } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { FloatingActionButton } from "@/components/floating-action-button";
 import { useNotes } from "@/contexts/NotesContext";
 import NoteCard from "./components/note-card";
+import { useMemo } from "react";
+import { Note } from "@/types";
 
 export default function Home() {
   const { notes, notesFolder, selectFolder } = useNotes();
 
+  const notesByDate = useMemo(() => {
+    const dates = new Map();
+    notes.forEach((note) => {
+      const date = note.updatedAt.toDateString();
+      if (!dates.has(date)) {
+        dates.set(date, []);
+      }
+      dates.get(date)?.push(note);
+    });
+    return dates;
+  }, [notes]);
+
+  console.log("notesByDate", notesByDate);
+
   // Show folder selection if no folder is selected
   if (!notesFolder) {
     return (
-      <motion.main
-        className="container flex flex-col items-center justify-center min-h-screen"
+      <motion.div
+        className="container flex flex-col items-center justify-center"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
@@ -43,15 +52,15 @@ export default function Home() {
             Select Notes Folder
           </Button>
         </motion.div>
-      </motion.main>
+      </motion.div>
     );
   }
   return (
-    <motion.main
-      className="container"
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
+      className="container max-w-screen-md mt-4"
     >
       <motion.div
         className="flex items-center justify-between mb-6"
@@ -61,34 +70,16 @@ export default function Home() {
       >
         <div>
           <h1 className="text-3xl font-semibold">Home</h1>
-          <p className="text-sm text-muted-foreground mt-1">{notesFolder}</p>
         </div>
-        <Button variant="outline" onClick={selectFolder}>
-          <FolderOpen className="h-4 w-4 mr-2" />
-          Change Folder
-        </Button>
       </motion.div>
 
       <motion.div
-        className="flex gap-4 items-end mb-6"
+        className="flex flex-col gap-4 w-full mb-6"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.2 }}
       >
-        <Input
-          placeholder="Search notes..."
-          className="h-12 px-4 py-2 max-w-md"
-        />
-        <Select>
-          <SelectTrigger className="w-[180px] h-12 px-4 py-2 max-w-md">
-            <SelectValue placeholder="Category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="personal">Personal</SelectItem>
-            <SelectItem value="work">Work</SelectItem>
-            <SelectItem value="other">Other</SelectItem>
-          </SelectContent>
-        </Select>
+        <Input placeholder="Search notes..." className="h-12 px-4 py-2" />
       </motion.div>
 
       {notes.length === 0 ? (
@@ -107,30 +98,37 @@ export default function Home() {
         </motion.div>
       ) : (
         <motion.div
-          className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+          className="grid grid-cols-1 gap-4 sm:grid-cols-1 lg:grid-cols-1"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.3 }}
         >
-          {notes.map((note, index) => (
-            <motion.div
-              key={note.title}
-              initial={{ opacity: 0, y: 20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{
-                duration: 0.3,
-                delay: 0.4 + index * 0.1,
-                ease: "easeOut",
-              }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <NoteCard note={note} />
-            </motion.div>
+          {Array.from(notesByDate.entries()).map(([date, notes]) => (
+            <>
+              <h3 key={date} className="text-sm">
+                {date}
+              </h3>
+              {notes.map((note: Note, noteIndex: number) => (
+                <motion.div
+                  key={note.title}
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{
+                    duration: 0.3,
+                    delay: 0.4 + noteIndex * 0.1,
+                    ease: "easeOut",
+                  }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <NoteCard note={note} />
+                </motion.div>
+              ))}
+            </>
           ))}
         </motion.div>
       )}
 
       <FloatingActionButton />
-    </motion.main>
+    </motion.div>
   );
 }

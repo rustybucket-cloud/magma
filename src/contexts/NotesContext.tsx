@@ -1,18 +1,26 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { fileSystem } from '@/lib/fileSystem'
-import { type Note } from '@/types'
+import { type Note, type FileTreeItem } from '@/types'
 
 interface NotesContextType {
   notes: Note[]
+  fileTree: FileTreeItem[]
   notesFolder: string | null
   isLoading: boolean
+  currentNote: Note | null
   selectFolder: () => Promise<void>
   loadNotes: () => Promise<void>
-  createNote: () => Promise<string | null>
+  loadFileTree: () => Promise<void>
+  createNote: (folderPath?: string) => Promise<string | null>
+  createFolder: (folderName: string, parentPath?: string) => Promise<boolean>
   saveNote: (title: string, content: string) => Promise<boolean>
   loadNote: (title: string) => Promise<Note | null>
+  loadNoteByPath: (path: string) => Promise<Note | null>
+  openFile: (path: string) => Promise<void>
   deleteNote: (title: string) => Promise<boolean>
+  deleteFileOrFolder: (path: string) => Promise<boolean>
   renameNote: (title: string, newTitle: string) => Promise<boolean>
+  renameFileOrFolder: (oldPath: string, newName: string, isFile?: boolean) => Promise<boolean>
 }
 
 const NotesContext = createContext<NotesContextType | undefined>(undefined)
@@ -31,8 +39,10 @@ interface NotesProviderProps {
 
 export function NotesProvider({ children }: NotesProviderProps) {
   const [notes, setNotes] = useState<Note[]>([])
+  const [fileTree, setFileTree] = useState<FileTreeItem[]>([])
   const [notesFolder, setNotesFolder] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [currentNote, setCurrentNote] = useState<Note | null>(null)
 
   // Initialize on mount
   useEffect(() => {
@@ -40,6 +50,7 @@ export function NotesProvider({ children }: NotesProviderProps) {
     if (savedFolder) {
       setNotesFolder(savedFolder)
       loadNotes()
+      loadFileTree()
     }
   }, [])
 
@@ -48,6 +59,19 @@ export function NotesProvider({ children }: NotesProviderProps) {
     if (folder) {
       setNotesFolder(folder)
       await loadNotes()
+      await loadFileTree()
+    }
+  }
+
+  const loadFileTree = async () => {
+    setIsLoading(true)
+    try {
+      const tree = await fileSystem.loadFileTree()
+      setFileTree(tree)
+    } catch (error) {
+      console.error('Error loading file tree:', error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -63,17 +87,32 @@ export function NotesProvider({ children }: NotesProviderProps) {
     }
   }
 
-  const createNote = async () => {
+  const createNote = async (folderPath?: string) => {
     try {
-      const noteTitle = await fileSystem.createNote()
+      const noteTitle = await fileSystem.createNote(folderPath)
       if (noteTitle) {
-        // Reload notes to reflect changes
+        // Reload notes and file tree to reflect changes
         await loadNotes()
+        await loadFileTree()
       }
       return noteTitle
     } catch (error) {
       console.error('Error creating note:', error)
       return null
+    }
+  }
+
+  const createFolder = async (folderName: string, parentPath?: string) => {
+    try {
+      const success = await fileSystem.createFolder(folderName, parentPath)
+      if (success) {
+        // Reload file tree to reflect changes
+        await loadFileTree()
+      }
+      return success
+    } catch (error) {
+      console.error('Error creating folder:', error)
+      return false
     }
   }
 
@@ -114,6 +153,26 @@ export function NotesProvider({ children }: NotesProviderProps) {
     }
   }
 
+  const loadNoteByPath = async (path: string) => {
+    try {
+      return await fileSystem.loadNoteByPath(path)
+    } catch (error) {
+      console.error('Error loading note by path:', error)
+      return null
+    }
+  }
+
+  const openFile = async (path: string) => {
+    try {
+      const note = await fileSystem.loadNoteByPath(path)
+      if (note) {
+        setCurrentNote(note)
+      }
+    } catch (error) {
+      console.error('Error opening file:', error)
+    }
+  }
+
   const deleteNote = async (title: string) => {
     try {
       const success = await fileSystem.deleteNote(title)
@@ -128,17 +187,55 @@ export function NotesProvider({ children }: NotesProviderProps) {
     }
   }
 
+  const deleteFileOrFolder = async (path: string) => {
+    try {
+      const success = await fileSystem.deleteFileOrFolder(path)
+      if (success) {
+        // Reload both notes and file tree to reflect changes
+        await loadNotes()
+        await loadFileTree()
+      }
+      return success
+    } catch (error) {
+      console.error('Error deleting file or folder:', error)
+      return false
+    }
+  }
+
+  const renameFileOrFolder = async (oldPath: string, newName: string, isFile: boolean = false) => {
+    try {
+      const success = await fileSystem.renameFileOrFolder(oldPath, newName, isFile)
+      if (success) {
+        // Reload both notes and file tree to reflect changes
+        await loadNotes()
+        await loadFileTree()
+      }
+      return success
+    } catch (error) {
+      console.error('Error renaming file or folder:', error)
+      return false
+    }
+  }
+
   const value: NotesContextType = {
     notes,
+    fileTree,
     notesFolder,
     isLoading,
+    currentNote,
     selectFolder,
     loadNotes,
+    loadFileTree,
     createNote,
+    createFolder,
     saveNote,
     loadNote,
+    loadNoteByPath,
+    openFile,
     deleteNote,
-    renameNote
+    deleteFileOrFolder,
+    renameNote,
+    renameFileOrFolder
   }
 
   return (

@@ -139,8 +139,9 @@
 @layer base {
   * {
     @apply border-border;
-    /* outline: 2px solid transparent; */
     outline-offset: 2px;
+
+    --header-height: 36px;
   }
 
   *:focus-visible {
