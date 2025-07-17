@@ -1,4 +1,5 @@
 import { RouterProvider, createBrowserRouter } from 'react-router'
+import { NotesProvider } from '@/contexts/NotesContext'
 import homeRouter from '@/pages/home/router'
 import "./index.css";
 
@@ -8,7 +9,9 @@ const router = createBrowserRouter([
 
 function App() {
   return (
-    <RouterProvider router={router} />
+    <NotesProvider>
+      <RouterProvider router={router} />
+    </NotesProvider>
   );
 }
 

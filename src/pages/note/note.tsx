@@ -5,86 +5,45 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { NoteEditor } from "@/components/note-editor"
 import { ArrowLeft } from "lucide-react"
-import { type Note, type Category } from "@/types"
-
-// Mock data - in a real app this would come from a store/API
-const mockNotes: Note[] = [
-  {
-    title: "Note 1",
-    content: "This is a note",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    id: "1",
-    category: {
-      id: "1",
-      name: "Personal",
-    },
-  },
-  {
-    title: "Note 2",
-    content: "This is another note",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    id: "2",
-    category: {
-      id: "2",
-      name: "Work",
-    },
-  },
-]
+import { useNotes } from "@/contexts/NotesContext"
 
 export default function NotePage() {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
-  const [existingNote, setExistingNote] = useState<Note | null>(null)
+  const { saveNote, loadNote } = useNotes()
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
-  const isEditing = Boolean(id)
 
   useEffect(() => {
     if (id) {
-      // In a real app, fetch note by ID from store/API
-      const note = mockNotes.find(n => n.id === id)
-      if (note) {
-        setExistingNote(note)
-        setTitle(note.title)
-        setContent(note.content)
-      }
+      // Load note from file system
+      loadNote(id).then(note => {
+        if (note) {
+          setTitle(note.title)
+          setContent(note.content)
+        }
+      })
     }
-  }, [id])
+  }, [id, loadNote])
 
-  const autoSave = useCallback(() => {
-    const defaultCategory: Category = {
-      id: "1",
-      name: "Personal"
-    }
-
-    if (isEditing && existingNote) {
-      // Update existing note
-      const updatedNote: Note = {
-        ...existingNote,
-        title,
-        content,
-        updatedAt: new Date(),
-      }
-      console.log("Auto-saving note:", updatedNote)
-    } else if (title.trim() || content.trim()) {
-      // Create new note only if there's content
-      const newNote: Note = {
+  const autoSave = useCallback(async () => {
+    if (title.trim() || content.trim()) {
+      const noteData = {
         title: title || "Untitled",
         content,
-        category: defaultCategory,
-        id: Date.now().toString(),
-        createdAt: new Date(),
-        updatedAt: new Date(),
       }
-      console.log("Auto-saving new note:", newNote)
+      
+      try {
+        await saveNote(noteData)
+      } catch (error) {
+        console.error("Error auto-saving note:", error)
+      }
     }
-  }, [title, content, isEditing, existingNote])
+  }, [title, content, saveNote])
 
-  // Auto-save after 1 second of inactivity
+  // Auto-save after 2 seconds of inactivity
   useEffect(() => {
-    const timer = setTimeout(autoSave, 1000)
+    const timer = setTimeout(autoSave, 2000)
     return () => clearTimeout(timer)
   }, [autoSave])
 
