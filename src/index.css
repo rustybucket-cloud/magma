@@ -209,12 +209,10 @@
     radial-gradient(circle at 25% 25%, rgba(245, 245, 245, 0.02) 1px, transparent 1px),
     radial-gradient(circle at 75% 75%, rgba(245, 245, 245, 0.015) 0.5px, transparent 0.5px);
     background-size: 100% 100%, 100% 100%, 50px 50px, 30px 30px;
-    /* transition: all 0.3s ease; */
   }
   
   .volcanic-card:hover {
     @apply border-accent;
-    transform: translateY(-3px);
     border-color: var(--volcanic-glow);
     box-shadow: var(--volcanic-shadow-lg);
   }

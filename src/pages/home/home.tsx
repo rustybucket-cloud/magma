@@ -23,8 +23,6 @@ export default function Home() {
   const navigate = useNavigate()
   const { notes, notesFolder, selectFolder } = useNotes()
 
-  console.log("notes:", notes)
-
   const handleNoteClick = (noteId: string) => {
     navigate(`/note/${noteId}`)
   }
@@ -73,7 +71,7 @@ export default function Home() {
         transition={{ duration: 0.4, delay: 0.1 }}
       >
         <div>
-          <h1 className="text-3xl font-semibold">Notes</h1>
+          <h1 className="text-3xl font-semibold">Home</h1>
           <p className="text-sm text-muted-foreground mt-1">
             {notesFolder}
           </p>
@@ -122,43 +120,46 @@ export default function Home() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.3 }}
         >
-          {notes.map((note, index) => (
-            <motion.div
-              key={note.id}
-              initial={{ opacity: 0, y: 20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ 
-                duration: 0.3, 
-                delay: 0.4 + (index * 0.1),
-                ease: "easeOut"
-              }}
-              whileHover={{ 
-                scale: 1.02, 
-                y: -4,
-                transition: { duration: 0.2 }
-              }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Card 
-                className="volcanic-card cursor-pointer shadow-sm hover:shadow-lg transition-shadow duration-200"
-                onClick={() => handleNoteClick(note.id)}
+            {notes.map((note, index) => (
+              <motion.div
+                key={note.id}
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ 
+                  duration: 0.3, 
+                  delay: 0.4 + (index * 0.1),
+                  ease: "easeOut"
+                }}
+                whileTap={{ scale: 0.98 }}
               >
-                <CardHeader>
-                  <CardTitle className="text-xl">{note.title}</CardTitle>
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {note.content.substring(0, 100)}...
-                  </p>
-                </CardHeader>
-                <CardFooter>
-                  <span className="text-xs text-muted-foreground">
-                    {note.updatedAt.toLocaleDateString()}
-                  </span>
-                </CardFooter>
-              </Card>
-            </motion.div>
-          ))}
-        </motion.div>
-      )}
+                <motion.div
+                  whileHover={{ 
+                    scale: 1.02, 
+                    y: -2,
+                    transition: { duration: 0.2 }
+                  }}
+                >
+                  <Card 
+                    className="volcanic-card cursor-pointer shadow-sm hover:shadow-lg transition-shadow"
+                    onClick={() => handleNoteClick(note.id)}
+                  >
+                    <CardHeader>
+                      <CardTitle className="text-xl">{note.title}</CardTitle>
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {note.content.substring(0, 100)}...
+                      </p>
+                    </CardHeader>
+                    <CardFooter>
+                      <span className="text-xs text-muted-foreground">
+                        {note.updatedAt.toLocaleDateString()}
+                      </span>
+                    </CardFooter>
+                  </Card>
+                </motion.div>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
       
       <FloatingActionButton />
     </motion.main>
