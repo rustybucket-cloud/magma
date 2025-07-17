@@ -23,8 +23,8 @@ export default function Home() {
   const navigate = useNavigate()
   const { notes, notesFolder, selectFolder } = useNotes()
 
-  const handleNoteClick = (noteId: string) => {
-    navigate(`/note/${noteId}`)
+  const handleNoteClick = (noteTitle: string) => {
+    navigate(`/note?title=${noteTitle}`)
   }
 
   // Show folder selection if no folder is selected
@@ -122,7 +122,7 @@ export default function Home() {
         >
             {notes.map((note, index) => (
               <motion.div
-                key={note.id}
+                key={note.title}
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ 
@@ -141,7 +141,7 @@ export default function Home() {
                 >
                   <Card 
                     className="volcanic-card cursor-pointer shadow-sm hover:shadow-lg transition-shadow"
-                    onClick={() => handleNoteClick(note.id)}
+                    onClick={() => handleNoteClick(note.title)}
                   >
                     <CardHeader>
                       <CardTitle className="text-xl">{note.title}</CardTitle>

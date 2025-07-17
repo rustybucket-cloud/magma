@@ -10,8 +10,4 @@ export default [
     path: "/note",
     element: <NotePage />,
   },
-  {
-    path: "/note/:id",
-    element: <NotePage />,
-  },
 ];

@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from "react-router"
+import { useNavigate, useSearchParams } from "react-router"
 import { useState, useEffect, useCallback } from "react"
 import { motion } from "motion/react"
 import { Button } from "@/components/ui/button"
@@ -9,46 +9,52 @@ import { useNotes } from "@/contexts/NotesContext"
 
 export default function NotePage() {
   const navigate = useNavigate()
-  const { id } = useParams<{ id: string }>()
-  const { saveNote, loadNote, createNote } = useNotes()
-  const [title, setTitle] = useState("")
+  const [searchParams, setSearchParams] = useSearchParams()
+  const title = searchParams.get('title') ?? 'Untitled'
+  const { saveNote, loadNote, createNote, renameNote } = useNotes()
   const [content, setContent] = useState("")
-  const [currentNoteId, setCurrentNoteId] = useState<string | null>(id || null)
+  const [internalTitle, setInternalTitle] = useState<string>(title ?? '')
 
   useEffect(() => {
-    if (id) {
+    if (title) {
       // Load existing note from file system
-      loadNote(id).then(note => {
+      loadNote(title).then(note => {
         if (note) {
-          setTitle(note.title)
           setContent(note.content)
-          setCurrentNoteId(id)
         }
       })
     }
-  }, [id, loadNote])
+  }, [title, loadNote])
+
+  const setTitle = async () => {
+    try {
+      await renameNote(title, internalTitle)
+      setSearchParams({ title: internalTitle })
+    } catch (error) {
+      console.error('Error renaming note:', error)
+    }
+  }
 
   const autoSave = useCallback(async () => {
-    if (title.trim() || content.trim()) {
+    if (title?.trim() || content.trim()) {
       try {
-        if (currentNoteId) {
+        if (title) {
           // Update existing note
-          await saveNote(currentNoteId, title || "Untitled", content)
+          await saveNote(title, content)
         } else {
-          // Create new note if we don't have an ID yet
-          const newNoteId = await createNote()
-          if (newNoteId) {
-            setCurrentNoteId(newNoteId)
-            await saveNote(newNoteId, title || "Untitled", content)
-            // Update URL to reflect the new note ID
-            navigate(`/note/${newNoteId}`, { replace: true })
+          // Create new note if we don't have a title yet
+          const newNoteTitle = await createNote()
+          if (newNoteTitle) {
+            await saveNote(newNoteTitle, content)
+            // Update URL to reflect the new note title
+            navigate(`/note/${encodeURIComponent(newNoteTitle)}`, { replace: true })
           }
         }
       } catch (error) {
         console.error("Error auto-saving note:", error)
       }
     }
-  }, [currentNoteId, title, content, saveNote, createNote, navigate])
+  }, [title, title, content, saveNote, createNote, navigate])
 
   // Auto-save after 2 seconds of inactivity
   useEffect(() => {
@@ -91,10 +97,11 @@ export default function NotePage() {
           transition={{ duration: 0.3, delay: 0.2 }}
         >
           <Input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            value={internalTitle}
+            onChange={(e) => setInternalTitle(e.target.value)}
             placeholder="Untitled"
             className="text-xl font-semibold border-none shadow-none focus-visible:ring-0 px-0"
+            onBlur={() => setTitle()}
           />
         </motion.div>
       </motion.header>
@@ -107,7 +114,7 @@ export default function NotePage() {
         transition={{ duration: 0.4, delay: 0.2 }}
       >
         <NoteEditor 
-          key={currentNoteId || 'new'}
+          key={title || 'new'}
           onContentChange={handleContentChange}
         />
       </motion.div>

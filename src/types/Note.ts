@@ -5,7 +5,6 @@ export type Note = {
 	content: string;
 	createdAt: Date;
 	updatedAt: Date;
-	id: string;
 	transcription?: string;
 	category: Category;
 }

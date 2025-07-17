@@ -1,10 +1,9 @@
 import { open } from '@tauri-apps/plugin-dialog'
-import { readDir, readTextFile, writeTextFile, exists } from '@tauri-apps/plugin-fs'
+import { readDir, readTextFile, writeTextFile, exists, rename } from '@tauri-apps/plugin-fs'
 import { join } from '@tauri-apps/api/path'
 import { type Note } from '@/types'
 
 export interface FileNote {
-  id: string
   title: string
   content: string
   filePath: string
@@ -14,6 +13,18 @@ export interface FileNote {
 
 export class FileSystemManager {
   private notesFolder: string | null = null
+
+  private titleToFilename(title: string): string {
+    // Convert title to safe filename by removing/replacing unsafe characters
+    return title
+      .replace(/[<>:"/\\|?*]/g, '-') // Replace unsafe characters with dash
+      .replace(/\s+/g, '-') // Replace spaces with dash
+      .replace(/-+/g, '-') // Replace multiple dashes with single dash
+      .replace(/^-|-$/g, '') // Remove leading/trailing dashes
+      .toLowerCase()
+  }
+
+
 
   async selectNotesFolder(): Promise<string | null> {
     try {
@@ -68,7 +79,6 @@ export class FileSystemManager {
             
             // Parse frontmatter if it exists, otherwise use file stats
             const note: Note = {
-              id: entry.name.replace('.md', ''),
               title,
               content,
               category: { id: '1', name: 'General' }, // Default category
@@ -96,15 +106,15 @@ export class FileSystemManager {
     }
 
     try {
-      // Generate unique ID and filename
+      // Generate unique title and filename
       const timestamp = Date.now()
-      const id = `note-${timestamp}`
-      const filename = `${id}.md`
+      const title = `Untitled-${timestamp}`
+      const filename = this.titleToFilename(title) + '.md'
       const filePath = await join(this.notesFolder, filename)
 
       // Create initial note content
       const frontmatter = `---
-title: Untitled
+title: ${title}
 created: ${new Date().toISOString()}
 updated: ${new Date().toISOString()}
 ---
@@ -112,20 +122,20 @@ updated: ${new Date().toISOString()}
 `
 
       await writeTextFile(filePath, frontmatter)
-      return id
+      return title
     } catch (error) {
       console.error('Error creating note:', error)
       return null
     }
   }
 
-  async saveNote(id: string, title: string, content: string): Promise<boolean> {
+  async saveNote(title: string, content: string): Promise<boolean> {
     if (!this.notesFolder) {
       throw new Error('No notes folder selected')
     }
 
     try {
-      const filename = `${id}.md`
+      const filename = this.titleToFilename(title) + '.md'
       const filePath = await join(this.notesFolder, filename)
 
       // Check if file exists to determine if this is an update
@@ -162,13 +172,13 @@ updated: ${new Date().toISOString()}
     }
   }
 
-  async loadNote(id: string): Promise<Note | null> {
+  async loadNote(title: string): Promise<Note | null> {
     if (!this.notesFolder) {
       return null
     }
 
     try {
-      const filename = id + '.md'
+      const filename = this.titleToFilename(title) + '.md'
       const filePath = await join(this.notesFolder, filename)
       
       if (!(await exists(filePath))) {
@@ -181,8 +191,7 @@ updated: ${new Date().toISOString()}
       const { frontmatter, body } = this.parseFrontmatter(content)
       
       return {
-        id,
-        title: frontmatter.title || id,
+        title: frontmatter.title || title,
         content: body,
         category: { id: '1', name: 'General' },
         createdAt: frontmatter.created ? new Date(frontmatter.created) : new Date(),
@@ -194,13 +203,37 @@ updated: ${new Date().toISOString()}
     }
   }
 
-  async deleteNote(id: string): Promise<boolean> {
+  async renameNote(title: string, newTitle: string): Promise<boolean> {
+    if (!this.notesFolder) {
+      throw new Error('No notes folder selected')
+    }
+
+    try {
+      const oldFilename = this.titleToFilename(title) + '.md'
+      const newFilename = this.titleToFilename(newTitle) + '.md'
+      const oldFilePath = await join(this.notesFolder, oldFilename)
+      const newFilePath = await join(this.notesFolder, newFilename)
+
+      const fileExists = await exists(oldFilePath)
+      if (!fileExists) {
+        throw new Error('Note not found')
+      }
+
+      await rename(oldFilePath, newFilePath)
+      return true
+    } catch (error) {
+      console.error('Error renaming note:', error)
+      return false
+    }
+  }
+
+  async deleteNote(title: string): Promise<boolean> {
     if (!this.notesFolder) {
       return false
     }
 
     try {
-      const filename = id + '.md'
+      const filename = this.titleToFilename(title) + '.md'
       const filePath = await join(this.notesFolder, filename)
       
       if (await exists(filePath)) {

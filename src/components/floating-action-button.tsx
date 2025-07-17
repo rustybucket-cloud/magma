@@ -15,9 +15,9 @@ export function FloatingActionButton({ className }: FloatingActionButtonProps) {
 
   const handleClick = async () => {
     try {
-      const noteId = await createNote()
-      if (noteId) {
-        navigate(`/note/${noteId}`)
+      const noteTitle = await createNote()
+      if (noteTitle) {
+        navigate(`/note/${encodeURIComponent(noteTitle)}`)
       } else {
         // Fallback to creating a note without file system
         navigate("/note")

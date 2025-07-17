@@ -9,9 +9,10 @@ interface NotesContextType {
   selectFolder: () => Promise<void>
   loadNotes: () => Promise<void>
   createNote: () => Promise<string | null>
-  saveNote: (id: string, title: string, content: string) => Promise<boolean>
-  loadNote: (id: string) => Promise<Note | null>
-  deleteNote: (id: string) => Promise<boolean>
+  saveNote: (title: string, content: string) => Promise<boolean>
+  loadNote: (title: string) => Promise<Note | null>
+  deleteNote: (title: string) => Promise<boolean>
+  renameNote: (title: string, newTitle: string) => Promise<boolean>
 }
 
 const NotesContext = createContext<NotesContextType | undefined>(undefined)
@@ -64,21 +65,21 @@ export function NotesProvider({ children }: NotesProviderProps) {
 
   const createNote = async () => {
     try {
-      const noteId = await fileSystem.createNote()
-      if (noteId) {
+      const noteTitle = await fileSystem.createNote()
+      if (noteTitle) {
         // Reload notes to reflect changes
         await loadNotes()
       }
-      return noteId
+      return noteTitle
     } catch (error) {
       console.error('Error creating note:', error)
       return null
     }
   }
 
-  const saveNote = async (id: string, title: string, content: string) => {
+  const saveNote = async (title: string, content: string) => {
     try {
-      const success = await fileSystem.saveNote(id, title, content)
+      const success = await fileSystem.saveNote(title, content)
       if (success) {
         // Reload notes to reflect changes
         await loadNotes()
@@ -90,18 +91,32 @@ export function NotesProvider({ children }: NotesProviderProps) {
     }
   }
 
-  const loadNote = async (id: string) => {
+  const renameNote = async (title: string, newTitle: string) => {
     try {
-      return await fileSystem.loadNote(id)
+      const success = await fileSystem.renameNote(title, newTitle)
+      if (success) {
+        await loadNotes()
+        return true
+      }
+      return false
+    } catch (error) {
+      console.error('Error renaming note:', error)
+      return false
+    }
+  }
+
+  const loadNote = async (title: string) => {
+    try {
+      return await fileSystem.loadNote(title)
     } catch (error) {
       console.error('Error loading note:', error)
       return null
     }
   }
 
-  const deleteNote = async (id: string) => {
+  const deleteNote = async (title: string) => {
     try {
-      const success = await fileSystem.deleteNote(id)
+      const success = await fileSystem.deleteNote(title)
       if (success) {
         // Reload notes to reflect changes
         await loadNotes()
@@ -122,7 +137,8 @@ export function NotesProvider({ children }: NotesProviderProps) {
     createNote,
     saveNote,
     loadNote,
-    deleteNote
+    deleteNote,
+    renameNote
   }
 
   return (
