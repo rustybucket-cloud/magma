@@ -17,7 +17,7 @@ export function FloatingActionButton({ className }: FloatingActionButtonProps) {
     try {
       const noteTitle = await createNote()
       if (noteTitle) {
-        navigate(`/note/${encodeURIComponent(noteTitle)}`)
+        navigate(`/note?title=${noteTitle}`)
       } else {
         // Fallback to creating a note without file system
         navigate("/note")

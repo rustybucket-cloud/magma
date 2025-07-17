@@ -1,4 +1,4 @@
-import { $getRoot } from "lexical"
+import { $getRoot, $createParagraphNode, $createTextNode } from "lexical"
 import { LexicalComposer } from "@lexical/react/LexicalComposer"
 import { PlainTextPlugin } from "@lexical/react/LexicalPlainTextPlugin"
 import { ContentEditable } from "@lexical/react/LexicalContentEditable"
@@ -20,17 +20,24 @@ function onError(error: Error) {
   console.error(error)
 }
 
-
-
 interface NoteEditorProps {
   onContentChange?: (content: string) => void
+  initialContent?: string
 }
 
-export function NoteEditor({ onContentChange }: NoteEditorProps) {
+export function NoteEditor({ onContentChange, initialContent }: NoteEditorProps) {
   const initialConfig = {
     namespace: "NoteEditor",
     theme,
     onError,
+    initialEditorState: () => {
+      if (!initialContent) return
+      const root = $getRoot()
+      const paragraph = $createParagraphNode()
+      const text = $createTextNode(initialContent)
+      paragraph.append(text)
+      root.append(paragraph)
+    },
   }
 
   return (

@@ -11,20 +11,23 @@ export default function NotePage() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const title = searchParams.get('title') ?? 'Untitled'
-  const { saveNote, loadNote, createNote, renameNote } = useNotes()
-  const [content, setContent] = useState("")
+  const { saveNote, loadNote, renameNote } = useNotes()
+  const [content, setContent] = useState<string | null>(null)
   const [internalTitle, setInternalTitle] = useState<string>(title ?? '')
 
   useEffect(() => {
     if (title) {
       // Load existing note from file system
       loadNote(title).then(note => {
+        console.log(note)
         if (note) {
           setContent(note.content)
         }
       })
     }
   }, [title, loadNote])
+
+  console.log(content)
 
   const setTitle = async () => {
     try {
@@ -35,35 +38,10 @@ export default function NotePage() {
     }
   }
 
-  const autoSave = useCallback(async () => {
-    if (title?.trim() || content.trim()) {
-      try {
-        if (title) {
-          // Update existing note
-          await saveNote(title, content)
-        } else {
-          // Create new note if we don't have a title yet
-          const newNoteTitle = await createNote()
-          if (newNoteTitle) {
-            await saveNote(newNoteTitle, content)
-            // Update URL to reflect the new note title
-            navigate(`/note/${encodeURIComponent(newNoteTitle)}`, { replace: true })
-          }
-        }
-      } catch (error) {
-        console.error("Error auto-saving note:", error)
-      }
-    }
-  }, [title, title, content, saveNote, createNote, navigate])
-
-  // Auto-save after 2 seconds of inactivity
-  useEffect(() => {
-    const timer = setTimeout(autoSave, 2000)
-    return () => clearTimeout(timer)
-  }, [autoSave])
-
   const handleContentChange = (newContent: string) => {
-    setContent(newContent)
+    console.log(newContent)
+    if (content == null) return
+    saveNote(title, newContent)
   }
 
   return (
@@ -113,10 +91,13 @@ export default function NotePage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.2 }}
       >
-        <NoteEditor 
-          key={title || 'new'}
-          onContentChange={handleContentChange}
-        />
+        {content ? (
+          <NoteEditor 
+            key={title || 'new'}
+            onContentChange={handleContentChange}
+            initialContent={content}
+          />
+        ) : null}
       </motion.div>
     </motion.div>
   )
