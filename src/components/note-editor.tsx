@@ -23,11 +23,13 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 interface NoteEditorProps {
   onContentChange?: (content: string) => void;
   initialContent?: string;
+  path?: string;
 }
 
 export function NoteEditor({
   onContentChange,
   initialContent,
+  path,
 }: NoteEditorProps) {
   const initialConfig = {
     namespace: "NoteEditor",
@@ -50,6 +52,7 @@ export function NoteEditor({
       <NoteEditorContent
         initialContent={initialContent}
         onContentChange={onContentChange}
+        path={path}
       />
     </LexicalComposer>
   );
@@ -58,23 +61,26 @@ export function NoteEditor({
 function NoteEditorContent({
   initialContent,
   onContentChange,
+  path,
 }: {
   initialContent?: string;
   onContentChange?: (content: string) => void;
+  path?: string;
 }) {
   const [editor] = useLexicalComposerContext();
-  const loadedRef = useRef<boolean>(false);
+  const prevPath = useRef<string | undefined>(path);
 
   useEffect(() => {
-    if (loadedRef.current) return;
+    console.log({ path, prevPath: prevPath.current, initialContent });
+    if (prevPath.current === path) return; // don't reinitialize if path is the same
 
     if (initialContent) {
-      loadedRef.current = true;
+      prevPath.current = path;
       editor.update(() => {
         $convertFromMarkdownString(initialContent || "", TRANSFORMERS);
       });
     }
-  }, [initialContent]);
+  }, [initialContent, path]);
 
   return (
     <>

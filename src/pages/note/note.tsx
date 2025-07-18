@@ -112,9 +112,10 @@ export default function NotePage() {
       >
         {content !== null ? (
           <NoteEditor
-            key={title || "new"}
             onContentChange={handleContentChange}
             initialContent={content || ""}
+            path={path ?? undefined}
+            key={path}
           />
         ) : null}
       </motion.div>
