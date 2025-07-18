@@ -18,7 +18,7 @@ export default function NoteCard({ note }: { note: Note }) {
       navigate(`/note/${encodeURIComponent(note.path)}`);
     } else {
       // Fallback for notes without path - create a default path
-      navigate(`/note/${encodeURIComponent(note.title + '.md')}`);
+      navigate(`/note/${encodeURIComponent(note.title + ".md")}`);
     }
   };
 
@@ -46,11 +46,6 @@ export default function NoteCard({ note }: { note: Note }) {
                   : note.content.replace(/---[\s\S]*?---/g, "")}
               </p>
             </CardHeader>
-            <CardFooter>
-              <span className="text-xs text-muted-foreground">
-                {note.updatedAt.toLocaleDateString()}
-              </span>
-            </CardFooter>
           </Card>
         </ContextMenuTrigger>
         <ContextMenuContent>
