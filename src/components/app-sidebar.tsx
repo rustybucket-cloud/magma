@@ -24,6 +24,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useNavigate } from "react-router";
 
 export default function AppSidebar() {
   const {
@@ -45,8 +46,15 @@ export default function AppSidebar() {
   const [deleteItemPath, setDeleteItemPath] = useState<string>("");
   const [deleteItemName, setDeleteItemName] = useState<string>("");
 
+  const navigate = useNavigate();
+
   const handleFileClick = async (path: string) => {
     await openFile(path);
+    // Extract filename without extension for the title
+    const pathParts = path.split('/');
+    const filename = pathParts[pathParts.length - 1];
+    const title = filename.replace(/\.[^/.]+$/, ''); // Remove file extension
+    navigate(`/note?title=${title}&path=${encodeURIComponent(path)}`);
   };
 
   const handleCreateNote = async (parentPath?: string) => {
@@ -178,7 +186,7 @@ export default function AppSidebar() {
                 onClick={selectFolder}
                 variant="outline"
                 size="sm"
-                className="flex-1"
+                className="flex-1 hover:bg-gray-600 hover:text-gray-100 hover:cursor-pointer"
               >
                 <FolderOpen className="h-4 w-4 mr-2" />
                 <span className="text-xs">

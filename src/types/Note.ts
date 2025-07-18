@@ -7,4 +7,5 @@ export type Note = {
 	updatedAt: Date;
 	transcription?: string;
 	category: Category;
+	path?: string; // Relative path to the file
 }

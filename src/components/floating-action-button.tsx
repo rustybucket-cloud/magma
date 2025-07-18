@@ -1,48 +1,48 @@
-import { Plus } from "lucide-react"
-import { useNavigate } from "react-router"
-import { motion } from "motion/react"
-import { Button } from "@/components/ui/button"
-import { useNotes } from "@/contexts/NotesContext"
-import { cn } from "@/lib/utils"
+import { useNavigate } from "react-router";
+import { motion } from "motion/react";
+import { Button } from "@/components/ui/button";
+import { useNotes } from "@/contexts/NotesContext";
+import { cn } from "@/lib/utils";
+import Mountain from "@/components/icons/mountain";
 
 interface FloatingActionButtonProps {
-  className?: string
+  className?: string;
 }
 
 export function FloatingActionButton({ className }: FloatingActionButtonProps) {
-  const navigate = useNavigate()
-  const { createNote } = useNotes()
+  const navigate = useNavigate();
+  const { createNote } = useNotes();
 
   const handleClick = async () => {
     try {
-      const noteTitle = await createNote()
+      const noteTitle = await createNote();
       if (noteTitle) {
-        navigate(`/note?title=${noteTitle}`)
+        navigate(`/note?title=${noteTitle}`);
       } else {
         // Fallback to creating a note without file system
-        navigate("/note")
+        navigate("/note");
       }
     } catch (error) {
-      console.error('Error creating note:', error)
+      console.error("Error creating note:", error);
       // Fallback to creating a note without file system
-      navigate("/note")
+      navigate("/note");
     }
-  }
+  };
 
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0, y: 100 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ 
-        duration: 0.5, 
+      transition={{
+        duration: 0.5,
         delay: 0.8,
         type: "spring",
         stiffness: 200,
-        damping: 20
+        damping: 20,
       }}
-      whileHover={{ 
+      whileHover={{
         scale: 1.1,
-        transition: { duration: 0.2 }
+        transition: { duration: 0.2 },
       }}
       whileTap={{ scale: 0.9 }}
       className="fixed bottom-6 right-6 z-50"
@@ -55,14 +55,11 @@ export function FloatingActionButton({ className }: FloatingActionButtonProps) {
         )}
         size="icon"
       >
-        <motion.div
-          whileHover={{ rotate: 90 }}
-          transition={{ duration: 0.2 }}
-        >
-          <Plus className="h-6 w-6" />
+        <motion.div whileHover={{ rotate: 90 }} transition={{ duration: 0.2 }}>
+          <Mountain style={{ width: "40px", height: "40px" }} />
         </motion.div>
         <span className="sr-only">Create new note</span>
       </Button>
     </motion.div>
-  )
+  );
 }

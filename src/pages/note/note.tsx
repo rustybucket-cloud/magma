@@ -1,51 +1,64 @@
-import { useNavigate, useSearchParams } from "react-router"
-import { useState, useEffect } from "react"
-import { motion } from "motion/react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { NoteEditor } from "@/components/note-editor"
-import { ArrowLeft } from "lucide-react"
-import { useNotes } from "@/contexts/NotesContext"
+import { useNavigate, useSearchParams } from "react-router";
+import { useState, useEffect } from "react";
+import { motion } from "motion/react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { NoteEditor } from "@/components/note-editor";
+import { ArrowLeft } from "lucide-react";
+import { useNotes } from "@/contexts/NotesContext";
 
 export default function NotePage() {
-  const navigate = useNavigate()
-  const [searchParams, setSearchParams] = useSearchParams()
-  const title = searchParams.get('title') ?? 'Untitled'
-  const { saveNote, loadNote, renameNote } = useNotes()
-  const [content, setContent] = useState<string | null>(null)
-  const [internalTitle, setInternalTitle] = useState<string>(title ?? '')
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const title = searchParams.get("title") ?? "Untitled";
+  const path = searchParams.get("path");
+  const { saveNote, loadNote, loadNoteByPath, renameNote } = useNotes();
+  const [content, setContent] = useState<string | null>(null);
+  const [internalTitle, setInternalTitle] = useState<string>(title ?? "");
 
   useEffect(() => {
-    if (title) {
-      // Load existing note from file system
-      loadNote(title).then(note => {
-        console.log(note)
+    if (path) {
+      // Load note by file path (from sidebar file click)
+      loadNoteByPath(decodeURIComponent(path)).then((note) => {
+        console.log("Loading note by path:", note);
         if (note) {
-          setContent(note.content)
+          setContent(note.content || "");
+        } else {
+          setContent(""); // Set empty content if note not found
         }
-      })
+      });
+    } else if (title) {
+      // Load existing note by title (legacy behavior)
+      loadNote(title).then((note) => {
+        console.log("Loading note by title:", note);
+        if (note) {
+          setContent(note.content || "");
+        } else {
+          setContent(""); // Set empty content if note not found
+        }
+      });
     }
-  }, [title, loadNote])
+  }, [title, path, loadNote, loadNoteByPath]);
 
-  console.log(content)
+  console.log(content);
 
   const setTitle = async () => {
     try {
-      await renameNote(title, internalTitle)
-      setSearchParams({ title: internalTitle })
+      await renameNote(title, internalTitle);
+      setSearchParams({ title: internalTitle });
     } catch (error) {
-      console.error('Error renaming note:', error)
+      console.error("Error renaming note:", error);
     }
-  }
+  };
 
   const handleContentChange = (newContent: string) => {
-    console.log(newContent)
-    if (content == null) return
-    saveNote(title, newContent)
-  }
+    console.log(newContent);
+    if (content == null) return;
+    saveNote(title, newContent);
+  };
 
   return (
-    <motion.div 
+    <motion.div
       className="h-screen flex flex-col"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -53,8 +66,8 @@ export default function NotePage() {
       transition={{ duration: 0.3, ease: "easeInOut" }}
     >
       {/* Header */}
-      <motion.header 
-        className="flex items-center gap-4 p-4 border-b bg-background"
+      <motion.header
+        className="flex items-center gap-4 p-4 border-b bg-background rounded-xl"
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.4, delay: 0.1 }}
@@ -85,20 +98,20 @@ export default function NotePage() {
       </motion.header>
 
       {/* Note Editor - Full height */}
-      <motion.div 
+      <motion.div
         className="flex-1 overflow-hidden"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.2 }}
       >
-        {content ? (
-          <NoteEditor 
-            key={title || 'new'}
+        {content !== null ? (
+          <NoteEditor
+            key={title || "new"}
             onContentChange={handleContentChange}
-            initialContent={content}
+            initialContent={content || ""}
           />
         ) : null}
       </motion.div>
     </motion.div>
-  )
+  );
 }

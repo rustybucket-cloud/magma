@@ -1,123 +1,156 @@
-import { useState, useRef, useEffect } from 'react'
-import { ChevronRight, ChevronDown, File, Folder, FolderOpen, Plus, FileText, Edit, Trash2 } from 'lucide-react'
-import { type FileTreeItem } from '@/types'
-import { cn } from '@/lib/utils'
-import { Input } from '@/components/ui/input'
+import { useState, useRef, useEffect } from "react";
+import {
+  ChevronRight,
+  ChevronDown,
+  File,
+  Folder,
+  FolderOpen,
+  Plus,
+  FileText,
+  Edit,
+  Trash2,
+} from "lucide-react";
+import { type FileTreeItem } from "@/types";
+import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
   ContextMenuTrigger,
-} from '@/components/ui/context-menu'
+} from "@/components/ui/context-menu";
 
 interface FolderTreeProps {
-  items: FileTreeItem[]
-  onFileClick?: (path: string) => void
-  onCreateFolder?: (parentPath?: string) => void
-  onCreateNote?: (parentPath?: string) => void
-  onRename?: (oldPath: string, newName: string, isFile: boolean) => Promise<boolean>
-  onDelete?: (path: string) => Promise<boolean>
-  level?: number
+  items: FileTreeItem[];
+  onFileClick?: (path: string) => void;
+  onCreateFolder?: (parentPath?: string) => void;
+  onCreateNote?: (parentPath?: string) => void;
+  onRename?: (
+    oldPath: string,
+    newName: string,
+    isFile: boolean
+  ) => Promise<boolean>;
+  onDelete?: (path: string) => Promise<boolean>;
+  level?: number;
 }
 
 interface FolderTreeItemProps {
-  item: FileTreeItem
-  onFileClick?: (path: string) => void
-  onCreateFolder?: (parentPath?: string) => void
-  onCreateNote?: (parentPath?: string) => void
-  onRename?: (oldPath: string, newName: string, isFile: boolean) => Promise<boolean>
-  onDelete?: (path: string) => Promise<boolean>
-  level: number
-  onToggle: (path: string) => void
+  item: FileTreeItem;
+  onFileClick?: (path: string) => void;
+  onCreateFolder?: (parentPath?: string) => void;
+  onCreateNote?: (parentPath?: string) => void;
+  onRename?: (
+    oldPath: string,
+    newName: string,
+    isFile: boolean
+  ) => Promise<boolean>;
+  onDelete?: (path: string) => Promise<boolean>;
+  level: number;
+  onToggle: (path: string) => void;
 }
 
-function FolderTreeItemComponent({ item, onFileClick, onCreateFolder, onCreateNote, onRename, onDelete, level, onToggle }: FolderTreeItemProps) {
-  const [isEditing, setIsEditing] = useState(false)
-  const [editValue, setEditValue] = useState(item.name)
-  const inputRef = useRef<HTMLInputElement>(null)
-  const isSubmittingRef = useRef(false)
+function FolderTreeItemComponent({
+  item,
+  onFileClick,
+  onCreateFolder,
+  onCreateNote,
+  onRename,
+  onDelete,
+  level,
+  onToggle,
+}: FolderTreeItemProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(item.name);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const isSubmittingRef = useRef(false);
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
-      inputRef.current.focus()
-      inputRef.current.select()
+      inputRef.current.focus();
+      inputRef.current.select();
     }
-  }, [isEditing])
+  }, [isEditing]);
 
   const handleClick = () => {
-    if (isEditing) return
-    
-    if (item.type === 'file') {
-      onFileClick?.(item.path)
+    if (isEditing) return;
+
+    if (item.type === "file") {
+      onFileClick?.(item.path);
     } else {
-      onToggle(item.path)
+      onToggle(item.path);
     }
-  }
+  };
 
   const handleRename = async () => {
-    if (isSubmittingRef.current) return
-    isSubmittingRef.current = true
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
 
     try {
       if (editValue.trim() && editValue !== item.name && onRename) {
-        const success = await onRename(item.path, editValue.trim(), item.type === 'file')
-        
+        const success = await onRename(
+          item.path,
+          editValue.trim(),
+          item.type === "file"
+        );
+
         if (success) {
-          setIsEditing(false)
+          setIsEditing(false);
         } else {
-          setEditValue(item.name) // Reset on failure
+          setEditValue(item.name); // Reset on failure
         }
       } else {
-        setIsEditing(false)
-        setEditValue(item.name)
+        setIsEditing(false);
+        setEditValue(item.name);
       }
     } catch (error) {
-      console.error('Error during rename:', error)
-      setEditValue(item.name)
+      console.error("Error during rename:", error);
+      setEditValue(item.name);
     } finally {
-      isSubmittingRef.current = false
+      isSubmittingRef.current = false;
     }
-  }
+  };
 
   const handleCancel = () => {
-    if (isSubmittingRef.current) return
-    setIsEditing(false)
-    setEditValue(item.name)
-  }
+    if (isSubmittingRef.current) return;
+    setIsEditing(false);
+    setEditValue(item.name);
+  };
 
   const handleKeyDown = async (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      e.stopPropagation()
-      await handleRename()
-    } else if (e.key === 'Escape') {
-      e.preventDefault()
-      e.stopPropagation()
-      handleCancel()
+    if (e.key === "Enter") {
+      e.preventDefault();
+      e.stopPropagation();
+      await handleRename();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
+      handleCancel();
     }
-  }
+  };
 
   const handleBlur = async () => {
     // Add a small delay to allow keydown to process first
     setTimeout(async () => {
       if (!isSubmittingRef.current && isEditing) {
-        await handleRename()
+        await handleRename();
       }
-    }, 100)
-  }
+    }, 100);
+  };
 
   const handleDelete = async () => {
     if (onDelete) {
-      await onDelete(item.path)
+      await onDelete(item.path);
     }
-  }
+  };
 
-  const paddingLeft = level * 16
+  const paddingLeft = level * 16;
+
+  console.log(item);
 
   const contextMenuContent = (
     <ContextMenuContent>
-      {item.type === 'folder' && (
+      {item.type === "folder" && (
         <>
           <ContextMenuItem onClick={() => onCreateNote?.(item.path)}>
             <FileText className="h-4 w-4" />
@@ -130,7 +163,7 @@ function FolderTreeItemComponent({ item, onFileClick, onCreateFolder, onCreateNo
           <ContextMenuSeparator />
         </>
       )}
-      {item.type === 'file' && (
+      {item.type === "file" && (
         <>
           <ContextMenuItem onClick={() => onFileClick?.(item.path)}>
             <File className="h-4 w-4" />
@@ -148,7 +181,7 @@ function FolderTreeItemComponent({ item, onFileClick, onCreateFolder, onCreateNo
         Delete
       </ContextMenuItem>
     </ContextMenuContent>
-  )
+  );
 
   return (
     <div>
@@ -162,7 +195,7 @@ function FolderTreeItemComponent({ item, onFileClick, onCreateFolder, onCreateNo
             style={{ paddingLeft }}
             onClick={handleClick}
           >
-            {item.type === 'folder' && (
+            {item.type === "folder" && (
               <div className="flex-shrink-0">
                 {item.isExpanded ? (
                   <ChevronDown className="h-4 w-4" />
@@ -171,9 +204,9 @@ function FolderTreeItemComponent({ item, onFileClick, onCreateFolder, onCreateNo
                 )}
               </div>
             )}
-            
+
             <div className="flex-shrink-0">
-              {item.type === 'file' ? (
+              {item.type === "file" ? (
                 <File className="h-4 w-4 text-muted-foreground" />
               ) : item.isExpanded ? (
                 <FolderOpen className="h-4 w-4 text-blue-500" />
@@ -181,7 +214,7 @@ function FolderTreeItemComponent({ item, onFileClick, onCreateFolder, onCreateNo
                 <Folder className="h-4 w-4 text-blue-500" />
               )}
             </div>
-            
+
             {isEditing ? (
               <Input
                 ref={inputRef}
@@ -199,8 +232,8 @@ function FolderTreeItemComponent({ item, onFileClick, onCreateFolder, onCreateNo
         </ContextMenuTrigger>
         {contextMenuContent}
       </ContextMenu>
-      
-      {item.type === 'folder' && item.isExpanded && item.children && (
+
+      {item.type === "folder" && item.isExpanded && item.children && (
         <div>
           {item.children.map((child) => (
             <FolderTreeItemComponent
@@ -218,34 +251,46 @@ function FolderTreeItemComponent({ item, onFileClick, onCreateFolder, onCreateNo
         </div>
       )}
     </div>
-  )
+  );
 }
 
-export function FolderTree({ items, onFileClick, onCreateFolder, onCreateNote, onRename, onDelete, level = 0 }: FolderTreeProps) {
-  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
+export function FolderTree({
+  items,
+  onFileClick,
+  onCreateFolder,
+  onCreateNote,
+  onRename,
+  onDelete,
+  level = 0,
+}: FolderTreeProps) {
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(
+    new Set()
+  );
 
   const handleToggle = (path: string) => {
-    setExpandedFolders(prev => {
-      const newSet = new Set(prev)
+    setExpandedFolders((prev) => {
+      const newSet = new Set(prev);
       if (newSet.has(path)) {
-        newSet.delete(path)
+        newSet.delete(path);
       } else {
-        newSet.add(path)
+        newSet.add(path);
       }
-      return newSet
-    })
-  }
+      return newSet;
+    });
+  };
 
   // Update items with expansion state
   const updateItemsWithExpansion = (items: FileTreeItem[]): FileTreeItem[] => {
-    return items.map(item => ({
+    return items.map((item) => ({
       ...item,
       isExpanded: expandedFolders.has(item.path),
-      children: item.children ? updateItemsWithExpansion(item.children) : undefined
-    }))
-  }
+      children: item.children
+        ? updateItemsWithExpansion(item.children)
+        : undefined,
+    }));
+  };
 
-  const itemsWithExpansion = updateItemsWithExpansion(items)
+  const itemsWithExpansion = updateItemsWithExpansion(items);
 
   return (
     <div className="space-y-1">
@@ -263,5 +308,5 @@ export function FolderTree({ items, onFileClick, onCreateFolder, onCreateNote, o
         />
       ))}
     </div>
-  )
+  );
 }

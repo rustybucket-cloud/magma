@@ -63,18 +63,7 @@ export default function Home() {
       className="container max-w-screen-md mt-4"
     >
       <motion.div
-        className="flex items-center justify-between mb-6"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.1 }}
-      >
-        <div>
-          <h1 className="text-3xl font-semibold">Home</h1>
-        </div>
-      </motion.div>
-
-      <motion.div
-        className="flex flex-col gap-4 w-full mb-6"
+        className="flex flex-col gap-4 w-full mb-2"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.2 }}

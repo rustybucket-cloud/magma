@@ -11,13 +11,7 @@ import {
 import { join } from "@tauri-apps/api/path";
 import { type Note, type FileTreeItem } from "@/types";
 
-export interface FileNote {
-  title: string;
-  content: string;
-  filePath: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
+
 
 export class FileSystemManager {
   private notesFolder: string | null = null;
@@ -177,6 +171,7 @@ export class FileSystemManager {
             updatedAt: frontmatter.updated
               ? new Date(frontmatter.updated)
               : new Date(),
+            path: itemPath, // Store the relative path for loading
           };
 
           notes.push(note);
@@ -356,6 +351,7 @@ updated: ${new Date().toISOString()}
         updatedAt: frontmatter.updated
           ? new Date(frontmatter.updated)
           : new Date(),
+        path: filename.replace('.md', ''), // Store the filename without extension as path
       };
     } catch (error) {
       console.error("Error loading note:", error);
@@ -394,6 +390,7 @@ updated: ${new Date().toISOString()}
         updatedAt: frontmatter.updated
           ? new Date(frontmatter.updated)
           : new Date(),
+        path: relativePath, // Store the relative path
       };
     } catch (error) {
       console.error("Error loading note by path:", error);

@@ -13,7 +13,13 @@ export default function NoteCard({ note }: { note: Note }) {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate(`/note?title=${note.title}`);
+    if (note.path) {
+      // Use path for notes loaded from file system
+      navigate(`/note?title=${encodeURIComponent(note.title)}&path=${encodeURIComponent(note.path)}`);
+    } else {
+      // Fallback for notes without path
+      navigate(`/note?title=${encodeURIComponent(note.title)}`);
+    }
   };
 
   return (
