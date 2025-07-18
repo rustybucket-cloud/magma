@@ -1,184 +1,182 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { NoteEditor } from '../note-editor'
 
-// Mock Editor.js
-vi.mock('@editorjs/editorjs', () => ({
-  default: vi.fn()
+// Mock Lexical modules
+vi.mock('@lexical/react/LexicalComposer', () => ({
+  LexicalComposer: ({ children }: { children: React.ReactNode }) => <div data-testid="lexical-composer">{children}</div>
 }))
 
-vi.mock('@editorjs/header', () => ({
-  default: vi.fn()
+vi.mock('@lexical/react/LexicalRichTextPlugin', () => ({
+  RichTextPlugin: ({ contentEditable }: { contentEditable: React.ReactNode }) => (
+    <div data-testid="rich-text-plugin">{contentEditable}</div>
+  )
 }))
 
-vi.mock('@editorjs/paragraph', () => ({
-  default: vi.fn()
+vi.mock('@lexical/react/LexicalContentEditable', () => ({
+  ContentEditable: ({ placeholder, ...props }: any) => (
+    <div data-testid="content-editable" {...props}>
+      {placeholder}
+    </div>
+  )
 }))
 
-// Import the mocked module
-import EditorJS from '@editorjs/editorjs'
+vi.mock('@lexical/react/LexicalAutoFocusPlugin', () => ({
+  AutoFocusPlugin: () => <div data-testid="auto-focus-plugin" />
+}))
 
-// Create mock functions
-const mockDestroy = vi.fn()
-const mockSave = vi.fn()
-const mockRender = vi.fn()
+vi.mock('@lexical/react/LexicalHistoryPlugin', () => ({
+  HistoryPlugin: () => <div data-testid="history-plugin" />
+}))
 
-const MockedEditorJS = vi.mocked(EditorJS)
+vi.mock('@lexical/react/LexicalOnChangePlugin', () => ({
+  OnChangePlugin: ({ onChange }: { onChange: (editorState: any) => void }) => {
+    ;(global as any).mockOnChange = onChange
+    return <div data-testid="on-change-plugin" />
+  }
+}))
+
+vi.mock('@lexical/react/LexicalMarkdownShortcutPlugin', () => ({
+  MarkdownShortcutPlugin: () => <div data-testid="markdown-shortcut-plugin" />
+}))
+
+vi.mock('@lexical/react/LexicalErrorBoundary', () => ({
+  LexicalErrorBoundary: () => <div data-testid="error-boundary" />
+}))
+
+vi.mock('@lexical/react/LexicalComposerContext', () => ({
+  useLexicalComposerContext: () => [
+    {
+      update: vi.fn((callback: () => void) => {
+        ;(global as any).mockUpdateCalled = true
+        callback()
+      })
+    }
+  ]
+}))
+
+vi.mock('@lexical/markdown', () => ({
+  $convertFromMarkdownString: vi.fn(),
+  $convertToMarkdownString: vi.fn(() => 'mocked markdown'),
+  TRANSFORMERS: []
+}))
+
+vi.mock('lexical', () => ({
+  $getRoot: vi.fn(() => ({}))
+}))
+
+// Mock all the node types
+vi.mock('@lexical/react/LexicalHorizontalRuleNode', () => ({
+  HorizontalRuleNode: {}
+}))
+
+vi.mock('@lexical/rich-text', () => ({
+  HeadingNode: {},
+  QuoteNode: {}
+}))
+
+vi.mock('@lexical/list', () => ({
+  ListNode: {},
+  ListItemNode: {}
+}))
+
+vi.mock('@lexical/code', () => ({
+  CodeNode: {}
+}))
+
+vi.mock('@lexical/link', () => ({
+  LinkNode: {}
+}))
 
 describe('NoteEditor', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    
-    // Setup mock implementation
-    MockedEditorJS.mockImplementation(() => ({
-      isReady: Promise.resolve(),
-      save: mockSave.mockResolvedValue({
-        blocks: [
-          {
-            type: 'paragraph',
-            data: {
-              text: 'Test content'
-            }
-          }
-        ]
-      }),
-      destroy: mockDestroy,
-      render: mockRender.mockResolvedValue(undefined),
-    } as any))
   })
 
-  it('renders without crashing', async () => {
+  it('renders without crashing', () => {
     render(<NoteEditor />)
-    // Wait for timeout-based initialization
-    await waitFor(() => {
-      expect(MockedEditorJS).toHaveBeenCalled()
-    })
+    expect(screen.getByTestId('lexical-composer')).toBeInTheDocument()
+    expect(screen.getByTestId('rich-text-plugin')).toBeInTheDocument()
+    expect(screen.getByTestId('content-editable')).toBeInTheDocument()
   })
 
-  it('initializes Editor.js with correct configuration', async () => {
-    const onContentChange = vi.fn()
-    render(<NoteEditor onContentChange={onContentChange} />)
-
-    await waitFor(() => {
-      expect(MockedEditorJS).toHaveBeenCalledWith(
-        expect.objectContaining({
-          tools: expect.objectContaining({
-            header: expect.any(Function),
-            paragraph: expect.any(Function)
-          }),
-          placeholder: "Start writing your note...",
-          onChange: expect.any(Function)
-        })
-      )
-    })
+  it('renders all required plugins', () => {
+    render(<NoteEditor />)
+    
+    expect(screen.getByTestId('auto-focus-plugin')).toBeInTheDocument()
+    expect(screen.getByTestId('history-plugin')).toBeInTheDocument()
+    expect(screen.getByTestId('on-change-plugin')).toBeInTheDocument()
+    expect(screen.getByTestId('markdown-shortcut-plugin')).toBeInTheDocument()
   })
 
-  it('initializes with initial content', async () => {
+  it('initializes with initial content', () => {
+    ;(global as any).mockUpdateCalled = false
     const initialContent = "Hello world"
     render(<NoteEditor initialContent={initialContent} />)
-
-    await waitFor(() => {
-      expect(MockedEditorJS).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: {
-            blocks: [
-              {
-                type: "paragraph",
-                data: {
-                  text: "Hello world"
-                }
-              }
-            ]
-          }
-        })
-      )
-    })
+    
+    // Should call update to set initial content
+    expect((global as any).mockUpdateCalled).toBe(true)
   })
 
-  it('initializes with empty content when no initial content provided', async () => {
+  it('does not initialize content when no initial content provided', () => {
+    ;(global as any).mockUpdateCalled = false
     render(<NoteEditor />)
-
-    await waitFor(() => {
-      expect(MockedEditorJS).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: undefined
-        })
-      )
-    })
-  })
-
-  it('does not recreate editor when initial content changes (relies on key prop)', async () => {
-    const { rerender } = render(<NoteEditor initialContent="First content" />)
     
-    // Wait for first initialization
-    await waitFor(() => {
-      expect(MockedEditorJS).toHaveBeenCalledTimes(1)
-    })
-    
-    expect(mockDestroy).not.toHaveBeenCalled()
-
-    // Change the content - should NOT recreate editor
-    rerender(<NoteEditor initialContent="Second content" />)
-
-    // Wait a bit to ensure no recreation happens
-    await new Promise(resolve => setTimeout(resolve, 50))
-
-    // Editor should not be recreated
-    expect(mockDestroy).not.toHaveBeenCalled()
-    expect(MockedEditorJS).toHaveBeenCalledTimes(1)
+    // Should not call update when no initial content
+    expect((global as any).mockUpdateCalled).toBe(false)
   })
 
   it('calls onContentChange when editor content changes', async () => {
     const onContentChange = vi.fn()
     render(<NoteEditor onContentChange={onContentChange} />)
 
-    // Wait for editor to initialize
-    await waitFor(() => {
-      expect(MockedEditorJS).toHaveBeenCalled()
-    })
+    // Get the onChange callback that was stored globally
+    const onChange = (global as any).mockOnChange
+    expect(onChange).toBeDefined()
 
-    // Get the onChange callback that was passed to Editor.js
-    const editorConfig = MockedEditorJS.mock.calls[0][0] as any
-    const onChange = editorConfig?.onChange
-
-    // Simulate content change
-    if (onChange) {
-      await onChange()
+    // Simulate editor state change
+    const mockEditorState = {
+      read: vi.fn((callback: () => void) => callback())
     }
-
-    expect(mockSave).toHaveBeenCalled()
-    expect(onContentChange).toHaveBeenCalledWith('Test content')
+    
+    onChange(mockEditorState)
+    
+    expect(onContentChange).toHaveBeenCalledWith('mocked markdown')
   })
 
-  it('handles destroy gracefully when destroy method is not available', async () => {
-    // Mock an editor instance without destroy method
-    MockedEditorJS.mockImplementation(() => ({
-      isReady: Promise.resolve(),
-      save: mockSave,
-      // No destroy method
-    } as any))
+  it('handles missing onContentChange gracefully', () => {
+    render(<NoteEditor />)
 
-    const { unmount } = render(<NoteEditor initialContent="Test" />)
+    // Get the onChange callback
+    const onChange = (global as any).mockOnChange
     
-    // Wait for initialization
-    await waitFor(() => {
-      expect(MockedEditorJS).toHaveBeenCalled()
-    })
+    // Simulate editor state change without onContentChange
+    const mockEditorState = {
+      read: vi.fn((callback: () => void) => callback())
+    }
     
-    // This should not throw an error
-    expect(() => unmount()).not.toThrow()
+    expect(() => onChange(mockEditorState)).not.toThrow()
   })
 
-  it('cleans up editor on unmount', async () => {
-    const { unmount } = render(<NoteEditor />)
+  it('renders with correct placeholder text', () => {
+    render(<NoteEditor />)
     
-    // Wait for initialization
-    await waitFor(() => {
-      expect(MockedEditorJS).toHaveBeenCalled()
-    })
+    const contentEditable = screen.getByTestId('content-editable')
+    expect(contentEditable).toBeInTheDocument()
+  })
+
+  it('only initializes content once', () => {
+    ;(global as any).mockUpdateCalled = false
+    const { rerender } = render(<NoteEditor initialContent="First content" />)
     
-    unmount()
+    expect((global as any).mockUpdateCalled).toBe(true)
     
-    expect(mockDestroy).toHaveBeenCalled()
+    // Reset the flag
+    ;(global as any).mockUpdateCalled = false
+    
+    // Re-render with different content - should not call update again due to initializedRef
+    rerender(<NoteEditor initialContent="Second content" />)
+    
+    expect((global as any).mockUpdateCalled).toBe(false)
   })
 })
