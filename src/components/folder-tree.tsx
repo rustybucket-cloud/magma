@@ -146,8 +146,6 @@ function FolderTreeItemComponent({
 
   const paddingLeft = level * 16;
 
-  console.log(item);
-
   const contextMenuContent = (
     <ContextMenuContent>
       {item.type === "folder" && (

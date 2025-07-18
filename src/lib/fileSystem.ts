@@ -365,7 +365,7 @@ updated: ${new Date().toISOString()}
     }
 
     try {
-      const filePath = await join(this.notesFolder, relativePath + ".md");
+      const filePath = await join(this.notesFolder, relativePath);
 
       if (!(await exists(filePath))) {
         return null;
@@ -378,7 +378,7 @@ updated: ${new Date().toISOString()}
 
       // Extract title from path (get filename without extension)
       const pathParts = relativePath.split("/");
-      const filename = pathParts[pathParts.length - 1];
+      const filename = pathParts[pathParts.length - 1].replace('.md', '');
 
       return {
         title: filename, // Use filename only, ignore frontmatter title
@@ -390,7 +390,7 @@ updated: ${new Date().toISOString()}
         updatedAt: frontmatter.updated
           ? new Date(frontmatter.updated)
           : new Date(),
-        path: relativePath, // Store the relative path
+        path: relativePath.replace('.md', ''), // Store the relative path without extension
       };
     } catch (error) {
       console.error("Error loading note by path:", error);
@@ -519,7 +519,6 @@ updated: ${new Date().toISOString()}
   } {
     const frontmatterRegex = /^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/;
     const match = content.match(frontmatterRegex);
-    console.log("match", match);
 
     if (match) {
       const frontmatterText = match[1];

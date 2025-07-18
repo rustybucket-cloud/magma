@@ -375,3 +375,46 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Editor.js Styling */
+.codex-editor {
+  @apply text-foreground;
+}
+
+.codex-editor__redactor {
+  @apply pb-4;
+}
+
+.ce-block__content {
+  @apply max-w-none;
+}
+
+.ce-paragraph {
+  @apply text-base leading-relaxed text-foreground;
+  font-family: 'Inter', sans-serif;
+}
+
+.ce-header {
+  font-family: 'Space Grotesk', sans-serif;
+  @apply text-foreground font-semibold;
+}
+
+.ce-toolbar__content {
+  @apply max-w-none;
+}
+
+.ce-block--focused .ce-block__content {
+  @apply bg-transparent;
+}
+
+.ce-paragraph[data-placeholder]:empty::before {
+  @apply text-muted-foreground;
+}
+
+.ce-toolbar__plus {
+  @apply text-muted-foreground hover:text-foreground;
+}
+
+.ce-toolbar__settings-btn {
+  @apply text-muted-foreground hover:text-foreground;
+}

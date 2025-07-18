@@ -19,28 +19,35 @@ export default function NotePage() {
   useEffect(() => {
     if (path) {
       // Load note by file path (from sidebar file click)
-      loadNoteByPath(decodeURIComponent(path)).then((note) => {
-        console.log("Loading note by path:", note);
-        if (note) {
-          setContent(note.content || "");
-        } else {
-          setContent(""); // Set empty content if note not found
-        }
-      });
+      const decodedPath = decodeURIComponent(path);
+      loadNoteByPath(decodedPath)
+        .then((note) => {
+          if (note) {
+            setContent(note.content || "");
+          } else {
+            setContent(""); // Set empty content if note not found
+          }
+        })
+        .catch((error) => {
+          console.error("Error loading note by path:", error);
+          setContent("");
+        });
     } else if (title) {
       // Load existing note by title (legacy behavior)
-      loadNote(title).then((note) => {
-        console.log("Loading note by title:", note);
-        if (note) {
-          setContent(note.content || "");
-        } else {
-          setContent(""); // Set empty content if note not found
-        }
-      });
+      loadNote(title)
+        .then((note) => {
+          if (note) {
+            setContent(note.content || "");
+          } else {
+            setContent(""); // Set empty content if note not found
+          }
+        })
+        .catch((error) => {
+          console.error("Error loading note by title:", error);
+          setContent("");
+        });
     }
   }, [title, path, loadNote, loadNoteByPath]);
-
-  console.log(content);
 
   const setTitle = async () => {
     try {
@@ -52,7 +59,6 @@ export default function NotePage() {
   };
 
   const handleContentChange = (newContent: string) => {
-    console.log(newContent);
     if (content == null) return;
     saveNote(title, newContent);
   };

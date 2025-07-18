@@ -1,78 +1,104 @@
-import { $getRoot, $createParagraphNode, $createTextNode } from "lexical"
-import { LexicalComposer } from "@lexical/react/LexicalComposer"
-import { PlainTextPlugin } from "@lexical/react/LexicalPlainTextPlugin"
-import { ContentEditable } from "@lexical/react/LexicalContentEditable"
-import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin"
-import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin"
-import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary"
-import { cn } from "@/lib/utils"
-
-const theme = {
-  paragraph: "mb-1",
-  text: {
-    bold: "font-semibold",
-    italic: "italic",
-    underline: "underline",
-  },
-}
-
-function onError(error: Error) {
-  console.error(error)
-}
+import { AutoFocusPlugin } from "@lexical/react/LexicalAutoFocusPlugin";
+import { LexicalComposer } from "@lexical/react/LexicalComposer";
+import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
+import { ContentEditable } from "@lexical/react/LexicalContentEditable";
+import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
+import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
+import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
+import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPlugin";
+import {
+  $convertFromMarkdownString,
+  $convertToMarkdownString,
+  TRANSFORMERS,
+} from "@lexical/markdown";
+import { HorizontalRuleNode } from "@lexical/react/LexicalHorizontalRuleNode";
+import { HeadingNode, QuoteNode } from "@lexical/rich-text";
+import { ListNode, ListItemNode } from "@lexical/list";
+import { CodeNode } from "@lexical/code";
+import { LinkNode } from "@lexical/link";
+import { $getRoot, EditorState } from "lexical";
+import { useEffect, useRef } from "react";
+import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 
 interface NoteEditorProps {
-  onContentChange?: (content: string) => void
-  initialContent?: string
+  onContentChange?: (content: string) => void;
+  initialContent?: string;
 }
 
-export function NoteEditor({ onContentChange, initialContent }: NoteEditorProps) {
+export function NoteEditor({
+  onContentChange,
+  initialContent,
+}: NoteEditorProps) {
   const initialConfig = {
     namespace: "NoteEditor",
-    theme,
-    onError,
-    initialEditorState: () => {
-      if (!initialContent) return
-      const root = $getRoot()
-      const paragraph = $createParagraphNode()
-      const text = $createTextNode(initialContent)
-      paragraph.append(text)
-      root.append(paragraph)
+    onError: (error: Error) => {
+      console.error("Lexical error:", error);
     },
-  }
+    nodes: [
+      HorizontalRuleNode,
+      HeadingNode,
+      QuoteNode,
+      CodeNode,
+      ListNode,
+      ListItemNode,
+      LinkNode,
+    ],
+  };
 
   return (
-    <div className="h-full">
-      <LexicalComposer initialConfig={initialConfig}>
-        <div className="h-full relative">
-          <PlainTextPlugin
-            contentEditable={
-              <ContentEditable
-                className={cn(
-                  "h-full w-full p-6 text-base ring-offset-background resize-none",
-                  "placeholder:text-muted-foreground focus-visible:outline-none",
-                  "disabled:cursor-not-allowed disabled:opacity-50"
-                )}
-              />
-            }
-            placeholder={
-              <div className="absolute top-6 left-6 text-base text-muted-foreground pointer-events-none">
-                Start writing your note...
-              </div>
-            }
-            ErrorBoundary={LexicalErrorBoundary}
+    <LexicalComposer initialConfig={initialConfig}>
+      <NoteEditorContent
+        initialContent={initialContent}
+        onContentChange={onContentChange}
+      />
+    </LexicalComposer>
+  );
+}
+
+function NoteEditorContent({
+  initialContent,
+  onContentChange,
+}: {
+  initialContent?: string;
+  onContentChange?: (content: string) => void;
+}) {
+  const [editor] = useLexicalComposerContext();
+  const loadedRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    if (loadedRef.current) return;
+
+    if (initialContent) {
+      loadedRef.current = true;
+      editor.update(() => {
+        $convertFromMarkdownString(initialContent || "", TRANSFORMERS);
+      });
+    }
+  }, [initialContent]);
+
+  return (
+    <>
+      <AutoFocusPlugin />
+      <RichTextPlugin
+        contentEditable={
+          <ContentEditable
+            aria-placeholder="Enter some text..."
+            placeholder={<div>Enter some text...</div>}
           />
-          <OnChangePlugin
-            onChange={(editorState) => {
-              editorState.read(() => {
-                const root = $getRoot()
-                const textContent = root.getTextContent()
-                onContentChange?.(textContent)
-              })
-            }}
-          />
-          <HistoryPlugin />
-        </div>
-      </LexicalComposer>
-    </div>
-  )
+        }
+        ErrorBoundary={LexicalErrorBoundary}
+      />
+      <HistoryPlugin />
+      <OnChangePlugin
+        onChange={(editorState: EditorState) => {
+          editorState.read(() => {
+            const root = $getRoot();
+            const markdown = $convertToMarkdownString(TRANSFORMERS, root);
+            onContentChange?.(markdown);
+          });
+        }}
+      />
+      <MarkdownShortcutPlugin transformers={TRANSFORMERS} />
+    </>
+  );
 }

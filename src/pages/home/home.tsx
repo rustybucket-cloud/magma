@@ -23,8 +23,6 @@ export default function Home() {
     return dates;
   }, [notes]);
 
-  console.log("notesByDate", notesByDate);
-
   // Show folder selection if no folder is selected
   if (!notesFolder) {
     return (

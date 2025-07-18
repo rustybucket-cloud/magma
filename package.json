@@ -9,10 +9,16 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "lint": "eslint",
-    "lint:fix": "eslint --fix"
+    "lint:fix": "eslint --fix",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run"
   },
   "dependencies": {
-    "@lexical/plain-text": "^0.33.1",
+    "@lexical/code": "^0.33.1",
+    "@lexical/link": "^0.33.1",
+    "@lexical/list": "^0.33.1",
+    "@lexical/markdown": "^0.33.1",
     "@lexical/react": "^0.33.1",
     "@lexical/rich-text": "^0.33.1",
     "@lexical/utils": "^0.33.1",
@@ -43,6 +49,9 @@
   "devDependencies": {
     "@eslint/js": "^9.31.0",
     "@tauri-apps/cli": "^2",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^24.0.14",
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.1",
@@ -52,9 +61,11 @@
     "eslint-plugin-prettier": "^5.5.1",
     "eslint-plugin-react": "^7.37.5",
     "globals": "^16.3.0",
+    "jsdom": "^26.1.0",
     "tw-animate-css": "^1.3.5",
     "typescript": "~5.6.2",
     "typescript-eslint": "^8.37.0",
-    "vite": "^6.0.3"
+    "vite": "^6.0.3",
+    "vitest": "^3.2.4"
   }
 }
