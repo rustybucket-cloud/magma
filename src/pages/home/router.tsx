@@ -7,7 +7,7 @@ export default [
     element: <Home />,
   },
   {
-    path: "/note",
-    element: <NotePage />,
+    path: "/note/:notePath",
+    Component: NotePage,
   },
 ];

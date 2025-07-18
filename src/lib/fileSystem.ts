@@ -222,7 +222,12 @@ updated: ${new Date().toISOString()}
 `;
 
       await writeTextFile(filePath, frontmatter);
-      return title;
+      
+      // Return the relative path from the notes folder
+      const relativePath = folderPath 
+        ? `${folderPath}/${filename}`
+        : filename;
+      return relativePath;
     } catch (error) {
       console.error("Error creating note:", error);
       return null;

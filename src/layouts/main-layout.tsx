@@ -3,7 +3,7 @@ import { NotesProvider } from "@/contexts/NotesContext";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import AppSidebar from "@/components/app-sidebar";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { useSearchParams, useLocation } from "react-router";
+import { useLocation, useParams } from "react-router";
 
 export default function MainLayout() {
   return (
@@ -34,14 +34,20 @@ function Header() {
 
 function HeaderText() {
   const location = useLocation();
-  const [searchParams] = useSearchParams();
+  const { notePath } = useParams<{ notePath: string }>();
 
   if (location.pathname === "/") {
     return "Home";
   }
 
-  if (location.pathname === "/note") {
-    return searchParams.get("title") ?? "Untitled";
+  if (location.pathname.startsWith("/note/")) {
+    // Extract filename from path for display
+    if (notePath) {
+      const decodedPath = decodeURIComponent(notePath);
+      const filename = decodedPath.split('/').pop()?.replace('.md', '') || "Untitled";
+      return filename;
+    }
+    return "Untitled";
   }
 
   return null;

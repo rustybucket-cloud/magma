@@ -15,10 +15,10 @@ export default function NoteCard({ note }: { note: Note }) {
   const handleClick = () => {
     if (note.path) {
       // Use path for notes loaded from file system
-      navigate(`/note?title=${encodeURIComponent(note.title)}&path=${encodeURIComponent(note.path)}`);
+      navigate(`/note/${encodeURIComponent(note.path)}`);
     } else {
-      // Fallback for notes without path
-      navigate(`/note?title=${encodeURIComponent(note.title)}`);
+      // Fallback for notes without path - create a default path
+      navigate(`/note/${encodeURIComponent(note.title + '.md')}`);
     }
   };
 

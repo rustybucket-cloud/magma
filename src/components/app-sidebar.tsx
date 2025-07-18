@@ -50,11 +50,7 @@ export default function AppSidebar() {
 
   const handleFileClick = async (path: string) => {
     await openFile(path);
-    // Extract filename without extension for the title
-    const pathParts = path.split('/');
-    const filename = pathParts[pathParts.length - 1];
-    const title = filename.replace(/\.[^/.]+$/, ''); // Remove file extension
-    navigate(`/note?title=${title}&path=${encodeURIComponent(path)}`);
+    navigate(`/note/${encodeURIComponent(path)}`);
   };
 
   const handleCreateNote = async (parentPath?: string) => {

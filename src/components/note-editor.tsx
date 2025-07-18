@@ -61,26 +61,22 @@ export function NoteEditor({
 function NoteEditorContent({
   initialContent,
   onContentChange,
-  path,
 }: {
   initialContent?: string;
   onContentChange?: (content: string) => void;
   path?: string;
 }) {
   const [editor] = useLexicalComposerContext();
-  const prevPath = useRef<string | undefined>(path);
+  const initializedRef = useRef(false);
 
   useEffect(() => {
-    console.log({ path, prevPath: prevPath.current, initialContent });
-    if (prevPath.current === path) return; // don't reinitialize if path is the same
-
-    if (initialContent) {
-      prevPath.current = path;
+    if (initialContent && !initializedRef.current) {
+      initializedRef.current = true;
       editor.update(() => {
         $convertFromMarkdownString(initialContent || "", TRANSFORMERS);
       });
     }
-  }, [initialContent, path]);
+  }, [initialContent]);
 
   return (
     <>

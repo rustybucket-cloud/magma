@@ -15,17 +15,19 @@ export function FloatingActionButton({ className }: FloatingActionButtonProps) {
 
   const handleClick = async () => {
     try {
-      const noteTitle = await createNote();
-      if (noteTitle) {
-        navigate(`/note?title=${noteTitle}`);
+      const notePath = await createNote();
+      if (notePath) {
+        navigate(`/note/${encodeURIComponent(notePath)}`);
       } else {
-        // Fallback to creating a note without file system
-        navigate("/note");
+        // Fallback - create a default path
+        const timestamp = Date.now();
+        navigate(`/note/${encodeURIComponent(`Untitled-${timestamp}.md`)}`);
       }
     } catch (error) {
       console.error("Error creating note:", error);
-      // Fallback to creating a note without file system
-      navigate("/note");
+      // Fallback - create a default path
+      const timestamp = Date.now();
+      navigate(`/note/${encodeURIComponent(`Untitled-${timestamp}.md`)}`);
     }
   };
 

@@ -1,4 +1,4 @@
-import { useNavigate, useSearchParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { Button } from "@/components/ui/button";
@@ -8,51 +8,49 @@ import { ArrowLeft } from "lucide-react";
 import { useNotes } from "@/contexts/NotesContext";
 
 export default function NotePage() {
+  const { notePath } = useParams<{ notePath: string }>();
+  const path = notePath ? decodeURIComponent(notePath) : undefined;
+  return <NotePageChild key={path} />;
+}
+
+// React router reuses the component when switching routes, so we need to use a key to force a re-render
+function NotePageChild() {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const title = searchParams.get("title") ?? "Untitled";
-  const path = searchParams.get("path");
-  const { saveNote, loadNote, loadNoteByPath, renameNote } = useNotes();
+  const { notePath } = useParams<{ notePath: string }>();
+  const path = notePath ? decodeURIComponent(notePath) : undefined;
+  const { saveNote, loadNoteByPath, renameNote } = useNotes();
   const [content, setContent] = useState<string | null>(null);
-  const [internalTitle, setInternalTitle] = useState<string>(title ?? "");
+  const [title, setTitle] = useState<string>("Untitled");
+  const [internalTitle, setInternalTitle] = useState<string>("Untitled");
 
   useEffect(() => {
     if (path) {
-      // Load note by file path (from sidebar file click)
-      const decodedPath = decodeURIComponent(path);
-      loadNoteByPath(decodedPath)
+      // Load note by file path
+      loadNoteByPath(path)
         .then((note) => {
           if (note) {
             setContent(note.content || "");
+            setTitle(note.title);
+            setInternalTitle(note.title);
           } else {
             setContent(""); // Set empty content if note not found
+            setTitle("Untitled");
+            setInternalTitle("Untitled");
           }
         })
         .catch((error) => {
           console.error("Error loading note by path:", error);
           setContent("");
-        });
-    } else if (title) {
-      // Load existing note by title (legacy behavior)
-      loadNote(title)
-        .then((note) => {
-          if (note) {
-            setContent(note.content || "");
-          } else {
-            setContent(""); // Set empty content if note not found
-          }
-        })
-        .catch((error) => {
-          console.error("Error loading note by title:", error);
-          setContent("");
+          setTitle("Untitled");
+          setInternalTitle("Untitled");
         });
     }
-  }, [title, path, loadNote, loadNoteByPath]);
+  }, [path, loadNoteByPath]);
 
-  const setTitle = async () => {
+  const handleTitleChange = async () => {
     try {
       await renameNote(title, internalTitle);
-      setSearchParams({ title: internalTitle });
+      setTitle(internalTitle);
     } catch (error) {
       console.error("Error renaming note:", error);
     }
@@ -98,7 +96,7 @@ export default function NotePage() {
             onChange={(e) => setInternalTitle(e.target.value)}
             placeholder="Untitled"
             className="text-xl font-semibold border-none shadow-none focus-visible:ring-0 px-0"
-            onBlur={() => setTitle()}
+            onBlur={() => handleTitleChange()}
           />
         </motion.div>
       </motion.header>
